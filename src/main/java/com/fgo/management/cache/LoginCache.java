@@ -39,4 +39,10 @@ public class LoginCache {
             return removed;
         });
     }
+
+    public boolean isTokenValid(String token) {
+        return USER_TOKEN_SET
+                .stream()
+                .anyMatch(item -> item.getToken().equals(token));
+    }
 }
