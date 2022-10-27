@@ -48,6 +48,5 @@ public class UserController {
             LOGGER.info("user: {} logout,ip: {}", userAccount.getAccount(), request.getRemoteAddr());
         }
         return MyResponse.success();
-
     }
 }
