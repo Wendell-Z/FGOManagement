@@ -216,6 +216,26 @@
         <!-- 测试环境, 指定某包日志为info级 -->
         <logger name="com.smile.ssm" level="info"/>
     </springProfile>
+    <springProfile name="sim">
+        <root level="info">
+            <appender-ref ref="ALL_FILE"/>
+        </root>
+        <!-- 开发环境, 指定某包日志为debug级 -->
+        <logger name="com.smile.ssm" level="debug"/>
+    </springProfile>
+
+    <springProfile name="sim">
+        <root level="info">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="DEBUG_FILE"/>
+            <appender-ref ref="INFO_FILE"/>
+            <appender-ref ref="WARN_FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+            <appender-ref ref="ALL_FILE"/>
+        </root>
+        <!-- 测试环境, 指定某包日志为info级 -->
+        <logger name="com.smile.ssm" level="info"/>
+    </springProfile>
 
     <springProfile name="pro">
         <root level="info">
