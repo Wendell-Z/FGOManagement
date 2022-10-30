@@ -48,6 +48,11 @@
         SET `status` = #{statusInfo.orderStatus}
         WHERE id = #{statusInfo.orderId}
     </update>
+    <update id="setOrderBoostingTask">
+        UPDATE order_detail
+        SET boostingTask = #{info.boostingTask}
+        WHERE id = #{info.orderId}
+    </update>
     <select id="queryOrderDetails" resultType="com.fgo.management.model.OrderDetail">
         SELECT id,
         orderNumber,

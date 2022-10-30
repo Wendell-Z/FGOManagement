@@ -1,6 +1,7 @@
 package com.fgo.management.service;
 
 import com.fgo.management.common.Constants;
+import com.fgo.management.dto.OrderBoostingInfo;
 import com.fgo.management.dto.OrderStatusInfo;
 import com.fgo.management.dto.QueryOrderCondition;
 import com.fgo.management.enums.OrderStatus;
@@ -62,5 +63,9 @@ public class OrderDetailService {
         } else {
             orderDetailMapper.updateOrderStatus(orderStatusInfo);
         }
+    }
+
+    public void setOrderBoostingTask(OrderBoostingInfo orderBoostingInfo) {
+        orderDetailMapper.setOrderBoostingTask(orderBoostingInfo);
     }
 }

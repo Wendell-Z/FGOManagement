@@ -1,5 +1,6 @@
 package com.fgo.management.mapper;
 
+import com.fgo.management.dto.OrderBoostingInfo;
 import com.fgo.management.dto.OrderStatusInfo;
 import com.fgo.management.dto.QueryOrderCondition;
 import com.fgo.management.model.OrderDetail;
@@ -22,4 +23,6 @@ public interface OrderDetailMapper {
     OrderDetail queryByOrderId(@Param("orderId") int orderId);
 
     List<OrderDetail> queryByPlayerAccountWithLock(@Param("account") String playerAccount);
+
+    void setOrderBoostingTask(@Param("info") OrderBoostingInfo orderBoostingInfo);
 }
