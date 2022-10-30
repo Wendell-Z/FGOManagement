@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fgo.management.mapper.OrderDetailMapper">
+    <insert id="insert">
+        insert into order_detail (orderNumber,
+                                  playerAccount,
+                                  playerEncryptionCode,
+                                  playerChannel,
+                                  teamOnHold,
+                                  boostingContent,
+                                  orderAmount,
+                                  playerContact,
+                                  status,
+                                  createTime,
+                                  fruitEnabled,
+                                  rockEnabled,
+                                  boostingTask)
+        values (#{order.orderNumber},
+                #{order.playerAccount},
+                #{order.playerEncryptionCode},
+                #{order.playerChannel},
+                #{order.teamOnHold},
+                #{order.boostingContent},
+                #{order.orderAmount},
+                #{order.playerContact},
+                #{order.status},
+                #{order.createTime},
+                #{order.fruitEnabled},
+                #{order.rockEnabled},
+                #{order.boostingTask})
+    </insert>
+    <update id="update">
+        UPDATE order_detail
+        SET orderNumber          = #{order.orderNumber},
+            playerAccount        = #{order.playerAccount},
+            playerEncryptionCode = #{order.playerEncryptionCode},
+            playerChannel        = #{order.playerChannel},
+            teamOnHold           = #{order.teamOnHold},
+            boostingContent      = #{order.boostingContent},
+            orderAmount          = #{order.orderAmount},
+            playerContact        = #{order.playerContact},
+            fruitEnabled         = #{order.fruitEnabled},
+            rockEnabled          = #{order.rockEnabled}
+        WHERE ID = #{order.id}
+    </update>
+    <update id="updateOrderStatus">
+        UPDATE order_detail
+        SET `status` = #{statusInfo.orderStatus}
+        WHERE id = #{statusInfo.orderId}
+    </update>
+    <select id="queryOrderDetails" resultType="com.fgo.management.model.OrderDetail">
+        SELECT id,
+        orderNumber,
+        playerAccount,
+        playerEncryptionCode,
+        playerChannel,
+        teamOnHold,
+        boostingContent,
+        orderAmount,
+        playerContact,
+        status,
+        createTime,
+        recentlyLoginTime,
+        rockAtStart,
+        fruitAtStart,
+        fruitAtCurrent,
+        rockAtCurrent,
+        battleCount,
+        exceptionMessage,
+        fruitEnabled,
+        rockEnabled,
+        boostingTask
+        FROM order_detail
+        <where>
+            1 = 1
+            <if test="condition.queryStr != null and !condition.queryStr.isEmpty()">
+                AND (orderNumber LIKE CONCAT('%', #{condition.queryStr},'%')
+                OR playerAccount LIKE CONCAT('%', #{condition.queryStr},'%'))
+            </if>
+            <if test="condition.status != null and !condition.status.isEmpty()">
+                AND status = #{condition.status}
+            </if>
+        </where>
+        ORDER BY createTime
+        <choose>
+            <when test="'ASC'.equals(condition.orderBy)">
+                ASC
+            </when>
+            <otherwise>
+                DESC
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryByOrderId" resultType="com.fgo.management.model.OrderDetail">
+        SELECT *
+        FROM order_detail
+        WHERE id = #{orderId}
+    </select>
+    <select id="queryByPlayerAccountWithLock" resultType="com.fgo.management.model.OrderDetail">
+        SELECT id, status
+        FROM order_detail
+        WHERE playerAccount = #{account} FOR
+        UPDATE
+    </select>
+</mapper>
