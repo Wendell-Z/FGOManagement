@@ -7,4 +7,10 @@
         WHERE rootParam = #{root}
           AND subParam = #{sub}
     </update>
+    <select id="queryByParam" resultType="com.fgo.management.model.ParamConfig">
+        SELECT *
+        FROM fgomanagement.param_config
+        WHERE rootParam = #{root}
+          AND subParam = #{sub}
+    </select>
 </mapper>

@@ -20,9 +20,11 @@ public interface OrderDetailMapper {
 
     void updateOrderStatus(@Param("statusInfo") OrderStatusInfo orderStatusInfo);
 
-    OrderDetail queryByOrderId(@Param("orderId") int orderId);
+    OrderDetail queryByOrderId(@Param("orderId") long orderId);
 
     List<OrderDetail> queryByPlayerAccountWithLock(@Param("account") String playerAccount);
 
     void setOrderBoostingTask(@Param("info") OrderBoostingInfo orderBoostingInfo);
+
+    void updateOrderSituationById(@Param("id") long id, @Param("json") String beanJson);
 }

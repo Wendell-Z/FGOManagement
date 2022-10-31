@@ -1,5 +1,6 @@
 package com.fgo.management.service;
 
+import com.fgo.management.annotations.OrderDetailToJson;
 import com.fgo.management.common.Constants;
 import com.fgo.management.dto.OrderBoostingInfo;
 import com.fgo.management.dto.OrderStatusInfo;
@@ -26,6 +27,8 @@ public class OrderDetailService {
     private OrderDetailMapper orderDetailMapper;
 
 
+    @OrderDetailToJson
+    @Transactional
     public void insert(OrderDetail orderDetail) {
         orderDetail.setCreateTime(Timestamp.valueOf(LocalDateTime.now()));
         orderDetail.setStatus(OrderStatus.INIT);
@@ -34,6 +37,8 @@ public class OrderDetailService {
         orderDetailMapper.insert(orderDetail);
     }
 
+    @OrderDetailToJson
+    @Transactional
     public void update(OrderDetail orderDetail) {
         BeanUtils.trimStringField(orderDetail);
         BeanUtils.setNullField(orderDetail, Constants.ONE_SPACE_STRING);
@@ -47,8 +52,9 @@ public class OrderDetailService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OrderDetailToJson
     public void updateOrderStatus(OrderStatusInfo orderStatusInfo) {
-        int orderId = orderStatusInfo.getOrderId();
+        long orderId = orderStatusInfo.getOrderId();
         OrderDetail orderDetail = orderDetailMapper.queryByOrderId(orderId);
         // LOCK EVERY order with same account
         List<OrderDetail> orderDetailList = orderDetailMapper.queryByPlayerAccountWithLock(orderDetail.getPlayerAccount());
@@ -67,5 +73,13 @@ public class OrderDetailService {
 
     public void setOrderBoostingTask(OrderBoostingInfo orderBoostingInfo) {
         orderDetailMapper.setOrderBoostingTask(orderBoostingInfo);
+    }
+
+    public OrderDetail queryOrderDetailById(long id) {
+        return orderDetailMapper.queryByOrderId(id);
+    }
+
+    public void updateOrderSituationById(Long id, String beanJson) {
+        orderDetailMapper.updateOrderSituationById(id, beanJson);
     }
 }

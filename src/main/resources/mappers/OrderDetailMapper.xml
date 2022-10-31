@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.fgo.management.mapper.OrderDetailMapper">
-    <insert id="insert">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into order_detail (orderNumber,
                                   playerAccount,
                                   playerEncryptionCode,
@@ -14,7 +14,9 @@
                                   createTime,
                                   fruitEnabled,
                                   rockEnabled,
-                                  boostingTask)
+                                  boostingTask,
+                                  boostingProgress,
+                                  accountSituation)
         values (#{order.orderNumber},
                 #{order.playerAccount},
                 #{order.playerEncryptionCode},
@@ -27,7 +29,9 @@
                 #{order.createTime},
                 #{order.fruitEnabled},
                 #{order.rockEnabled},
-                #{order.boostingTask})
+                #{order.boostingTask},
+                ' ',
+                ' ')
     </insert>
     <update id="update">
         UPDATE order_detail
@@ -52,6 +56,11 @@
         UPDATE order_detail
         SET boostingTask = #{info.boostingTask}
         WHERE id = #{info.orderId}
+    </update>
+    <update id="updateOrderSituationById">
+        UPDATE order_detail
+        SET accountSituation = #{json}
+        WHERE id = #{id}
     </update>
     <select id="queryOrderDetails" resultType="com.fgo.management.model.OrderDetail">
         SELECT id,
@@ -97,7 +106,16 @@
         </choose>
     </select>
     <select id="queryByOrderId" resultType="com.fgo.management.model.OrderDetail">
-        SELECT *
+        SELECT id,
+               orderNumber,
+               playerAccount,
+               playerEncryptionCode,
+               teamOnHold,
+               status,
+               createTime,
+               fruitEnabled,
+               rockEnabled,
+               boostingTask
         FROM order_detail
         WHERE id = #{orderId}
     </select>
