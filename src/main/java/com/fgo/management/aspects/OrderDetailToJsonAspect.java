@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
+import java.util.Locale;
 
 @Component
 @Aspect
@@ -49,8 +50,8 @@ public class OrderDetailToJsonAspect {
                 String[] enums = paramConfig.getParamValue().split(",");
                 for (String anEnum : enums) {
                     ActivePower activePower = ActivePower.valueOf(anEnum);
-                    orderDetail.setFruitEnabled(Boolean.valueOf(activePower == ActivePower.FRUIT).toString());
-                    orderDetail.setRockEnabled(Boolean.valueOf(activePower == ActivePower.ROCK).toString());
+                    orderDetail.setFruitEnabled(Boolean.valueOf(activePower == ActivePower.FRUIT).toString().toUpperCase(Locale.ROOT));
+                    orderDetail.setRockEnabled(Boolean.valueOf(activePower == ActivePower.ROCK).toString().toUpperCase(Locale.ROOT));
                 }
                 orderDetailService.updateOrderSituationById(id, JSONUtil.parse(orderDetail).toString());
             }

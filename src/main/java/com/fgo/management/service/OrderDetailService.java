@@ -71,6 +71,8 @@ public class OrderDetailService {
         }
     }
 
+    @OrderDetailToJson
+    @Transactional
     public void setOrderBoostingTask(OrderBoostingInfo orderBoostingInfo) {
         orderDetailMapper.setOrderBoostingTask(orderBoostingInfo);
     }

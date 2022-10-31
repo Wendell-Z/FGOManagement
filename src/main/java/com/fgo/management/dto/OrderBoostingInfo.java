@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class OrderBoostingInfo {
 
-    private int orderId;
+    private long orderId;
 
     private String boostingTask;
 }
