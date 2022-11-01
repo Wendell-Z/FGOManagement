@@ -6,7 +6,7 @@
                `ACCOUNT`,
                userName,
                userRole
-        FROM USER_ACCOUNT_T
+        FROM user_account_t
         WHERE `ACCOUNT` = #{userAccount.account}
           AND encryptionCode = #{userAccount.password}
     </select>

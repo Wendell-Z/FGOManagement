@@ -34,7 +34,7 @@ public class OrderController {
         return MyResponse.success();
     }
 
-    @GetMapping
+    @PostMapping("/search")
     @LoginValid
     public MyResponse queryOrder(HttpServletRequest request, @Validated @RequestBody QueryOrderCondition queryOrderCondition) {
         return MyResponse.success(orderDetailService.pageQueryOrder(queryOrderCondition));
