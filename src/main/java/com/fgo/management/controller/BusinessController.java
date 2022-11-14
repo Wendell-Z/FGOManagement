@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RequestMapping("/business")
@@ -20,14 +21,14 @@ public class BusinessController {
 
     @PutMapping("/event/activePower")
     @LoginValid
-    public MyResponse setEventActivePower(@Validated @RequestBody ParamConfig paramConfig) {
+    public MyResponse setEventActivePower(HttpServletRequest request, @Validated @RequestBody ParamConfig paramConfig) {
         paramConfigService.updateParamValue(paramConfig.getRootParam(), paramConfig.getSubParam(), paramConfig.getParamValue());
         return MyResponse.success();
     }
 
     @PostMapping("/order")
     @LoginValid
-    public MyResponse businessOrder(@Validated @RequestBody List<BusinessOrder> businessOrders) {
+    public MyResponse businessOrder(HttpServletRequest request, @Validated @RequestBody List<BusinessOrder> businessOrders) {
         paramConfigService.setBusinessOrder(businessOrders);
         return MyResponse.success();
     }
