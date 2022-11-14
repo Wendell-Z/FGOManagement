@@ -7,6 +7,19 @@
         WHERE rootParam = #{root}
           AND subParam = #{sub}
     </update>
+    <insert id="mergeBusinessOrder">
+        INSERT INTO param_config
+        (rootParam,
+         subParam,
+         paramDesc,
+         paramValue)
+        values ('BUSINESS',
+                'ORDER',
+                '业务执行顺序',
+                #{value})
+        ON DUPLICATE KEY
+            UPDATE paramValue = #{value}
+    </insert>
     <select id="queryByParam" resultType="com.fgo.management.model.ParamConfig">
         SELECT *
         FROM fgomanagement.param_config

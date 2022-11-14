@@ -125,4 +125,9 @@
         WHERE playerAccount = #{account} FOR
         UPDATE
     </select>
+    <select id="queryBoostingProgressByOrderId" resultType="java.lang.String">
+        SELECT boostingProgress
+        FROM order_detail
+        WHERE id = #{orderId}
+    </select>
 </mapper>

@@ -10,4 +10,6 @@ public interface ParamConfigMapper {
     void updateParamValue(@Param("root") String rootParam, @Param("sub") String subParam, @Param("value") String paramValue);
 
     ParamConfig queryByParam(@Param("root") String root, @Param("sub") String sub);
+
+    void mergeBusinessOrder(@Param("value") String value);
 }

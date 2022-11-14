@@ -4,14 +4,13 @@ package com.fgo.management.controller;
 import com.fgo.management.cache.LoginCache;
 import com.fgo.management.dto.MyResponse;
 import com.fgo.management.model.UserAccount;
+import com.fgo.management.model.UserBasicInfo;
+import com.fgo.management.service.OrderDetailService;
 import com.fgo.management.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +23,8 @@ public class UserController {
     public static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
     @Autowired
     private UserService userService;
+    @Autowired
+    private OrderDetailService orderDetailService;
     @Autowired
     private LoginCache loginCache;
 
@@ -48,5 +49,12 @@ public class UserController {
             LOGGER.info("user: {} logout,ip: {}", userAccount.getAccount(), request.getRemoteAddr());
         }
         return MyResponse.success();
+    }
+
+    @GetMapping("/basic")
+    public MyResponse basicInfo(@RequestParam long orderId) {
+        // 通过主键获取基本信息
+        UserBasicInfo basicInfo = orderDetailService.queryBasicInfo(orderId);
+        return MyResponse.success(basicInfo);
     }
 }

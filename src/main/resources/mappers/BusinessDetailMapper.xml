@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fgo.management.mapper.BusinessDetailMapper">
+    <insert id="merge">
+        INSERT INTO boosting_detail
+        (orderId,
+         businessType,
+         status,
+         boostingTask,
+         progress,
+         createTime,
+         lastUpdateTime)
+        VALUES (#{bean.orderId},
+                #{bean.businessType},
+                #{bean.status},
+                #{bean.boostingTask},
+                #{bean.progress},
+                #{bean.createTime},
+                #{bean.lastUpdateTime})
+        ON DUPLICATE KEY UPDATE boostingTask = #{bean.boostingTask},
+                                status       = 'N'
+    </insert>
+    <delete id="delete">
+        DELETE
+        FROM boosting_detail
+        WHERE orderId = #{orderId}
+          AND businessType = #{businessType}
+    </delete>
+    <select id="queryByOrderId" resultType="com.fgo.management.model.BoostingDetail">
+        SELECT DISTINCT businessType
+        FROM boosting_detail
+        WHERE orderId = #{orderId}
+    </select>
+
+</mapper>
