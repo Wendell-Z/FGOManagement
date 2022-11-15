@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class ManagementApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ManagementApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ManagementApplication.class, args);
+    }
 
 }

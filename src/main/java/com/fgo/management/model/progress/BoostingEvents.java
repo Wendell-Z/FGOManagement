@@ -8,12 +8,12 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class SignInProgress extends BoostingProgress {
+public class BoostingEvents extends BoostingProgress {
 
-    private int days;
+    private String eventName;
+    private String boostingContent;
+    private String progress;
+    private String status;
 
-    private int daysOfSignedIn;
-
-    private String lastSignTime;
 
 }

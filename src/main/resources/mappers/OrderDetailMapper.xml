@@ -130,4 +130,5 @@
         FROM order_detail
         WHERE id = #{orderId}
     </select>
+
 </mapper>

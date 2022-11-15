@@ -29,4 +29,6 @@ public interface OrderDetailMapper {
     void updateOrderSituationById(@Param("id") long id, @Param("json") String beanJson);
 
     String queryBoostingProgressByOrderId(@Param("orderId") long orderId);
+
+
 }
