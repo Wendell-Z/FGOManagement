@@ -83,7 +83,8 @@ public class OrderDetailService {
                 .collect(Collectors.toList());
         if (!runningOrders.isEmpty()) {
             long id = runningOrders.get(0).getId();
-            throw new RuntimeException(String.format("订单ID:%s是同账号玩家，已经在代练中，请先关闭后再开启当前订单的代练！", id));
+            String playerAccount = runningOrders.get(0).getPlayerAccount();
+            throw new RuntimeException(String.format("订单ID:%s,是同账号%s玩家，已经在代练中，请先关闭后再开启当前订单的代练！", id, playerAccount));
         } else {
             ParamConfig paramConfig = paramConfigService.queryByParam("BUSINESS", "ORDER");
             List<BusinessOrder> businessOrders = JSONUtil.toList(paramConfig.getParamValue(), BusinessOrder.class);
