@@ -37,7 +37,8 @@ public class BusinessController {
     }
 
     @GetMapping("/progressOverview")
-    public MyResponse progress(@RequestParam long orderId) {
+    @LoginValid
+    public MyResponse progress(HttpServletRequest request, @RequestParam long orderId) {
         // 订单服务
         return MyResponse.success(orderDetailService.progress(orderId));
     }

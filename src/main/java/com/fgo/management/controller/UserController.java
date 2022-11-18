@@ -1,6 +1,7 @@
 package com.fgo.management.controller;
 
 
+import com.fgo.management.annotations.LoginValid;
 import com.fgo.management.cache.LoginCache;
 import com.fgo.management.dto.MyResponse;
 import com.fgo.management.model.UserAccount;
@@ -52,7 +53,8 @@ public class UserController {
     }
 
     @GetMapping("/basic")
-    public MyResponse basicInfo(@RequestParam long orderId) {
+    @LoginValid
+    public MyResponse basicInfo(HttpServletRequest request, @RequestParam long orderId) {
         // 通过主键获取基本信息
         UserBasicInfo basicInfo = orderDetailService.queryBasicInfo(orderId);
         return MyResponse.success(basicInfo);
