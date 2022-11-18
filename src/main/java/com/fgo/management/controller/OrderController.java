@@ -4,6 +4,7 @@ import com.fgo.management.annotations.LoginValid;
 import com.fgo.management.dto.MyResponse;
 import com.fgo.management.dto.OrderStatusInfo;
 import com.fgo.management.dto.QueryOrderCondition;
+import com.fgo.management.enums.OrderStatus;
 import com.fgo.management.model.OrderDetail;
 import com.fgo.management.service.OrderDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @RequestMapping("/order")
 @RestController
@@ -44,6 +46,13 @@ public class OrderController {
     @LoginValid
     public MyResponse updateOrderStatus(HttpServletRequest request, @Validated @RequestBody OrderStatusInfo orderStatusInfo) {
         orderDetailService.updateOrderStatus(orderStatusInfo);
+        return MyResponse.success();
+    }
+
+    @PostMapping("/settled")
+    @LoginValid
+    public MyResponse settled(HttpServletRequest request, @RequestBody List<String> orderIds) {
+        orderDetailService.updateOrderStatus(orderIds, OrderStatus.SETTLED);
         return MyResponse.success();
     }
 }

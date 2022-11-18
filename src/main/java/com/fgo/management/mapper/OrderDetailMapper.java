@@ -3,6 +3,7 @@ package com.fgo.management.mapper;
 import com.fgo.management.dto.OrderBoostingInfo;
 import com.fgo.management.dto.OrderStatusInfo;
 import com.fgo.management.dto.QueryOrderCondition;
+import com.fgo.management.enums.OrderStatus;
 import com.fgo.management.model.OrderDetail;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -31,4 +32,5 @@ public interface OrderDetailMapper {
     String queryBoostingProgressByOrderId(@Param("orderId") long orderId);
 
 
+    void batchUpdateOrderStatus(@Param("list") List<String> orderIds, @Param("status") OrderStatus orderStatus);
 }

@@ -232,4 +232,10 @@ public class OrderDetailService {
                 "}";
         return StrUtil.isBlank(boostingProgress) ? new ProgressOverview() : JSONUtil.toBean(boostingProgress, ProgressOverview.class);
     }
+
+    public void updateOrderStatus(List<String> orderIds, OrderStatus orderStatus) {
+        if (!orderIds.isEmpty()) {
+            orderDetailMapper.batchUpdateOrderStatus(orderIds, orderStatus);
+        }
+    }
 }

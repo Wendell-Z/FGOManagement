@@ -62,6 +62,14 @@
         SET accountSituation = #{json}
         WHERE id = #{id}
     </update>
+    <update id="batchUpdateOrderStatus">
+        UPDATE fgomanagement.order_detail
+        SET fgomanagement.order_detail.status = #{status}
+        WHERE id IN
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
     <select id="queryOrderDetails" resultType="com.fgo.management.model.OrderDetail">
         SELECT id,
         orderNumber,
