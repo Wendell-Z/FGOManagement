@@ -30,4 +30,8 @@ public class BoostingDetailService {
     public List<BoostingDetail> queryByOrderId(long orderId) {
         return businessDetailMapper.queryByOrderId(orderId);
     }
+
+    public List<BoostingDetail> queryProgressByOrderId(long orderId) {
+        return businessDetailMapper.queryProgressByOrderId(orderId);
+    }
 }

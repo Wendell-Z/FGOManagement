@@ -137,7 +137,7 @@ public class OrderDetailService {
     public ProgressOverview progress(long orderId) {
         // 查询这个订单的所有的业务记录
         // 把进度拿进来json转换成类 返回
-        List<BoostingDetail> boostingDetails = boostingDetailService.queryByOrderId(orderId);
+        List<BoostingDetail> boostingDetails = boostingDetailService.queryProgressByOrderId(orderId);
         Map<BusinessType, BoostingDetail> boostingDetailMap = boostingDetails
                 .stream()
                 .collect(Collectors.toMap(item -> BusinessType.valueOf(item.getBusinessType()), item -> item));

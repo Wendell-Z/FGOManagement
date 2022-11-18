@@ -31,5 +31,10 @@
         FROM boosting_detail
         WHERE orderId = #{orderId}
     </select>
+    <select id="queryProgressByOrderId" resultType="com.fgo.management.model.BoostingDetail">
+        SELECT businessType, progress
+        FROM boosting_detail
+        WHERE orderId = #{orderId}
+    </select>
 
 </mapper>

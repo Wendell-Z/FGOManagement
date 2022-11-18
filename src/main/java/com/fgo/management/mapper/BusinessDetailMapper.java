@@ -15,4 +15,6 @@ public interface BusinessDetailMapper {
     void delete(@Param("orderId") long orderId, @Param("businessType") String businessType);
 
     List<BoostingDetail> queryByOrderId(@Param("orderId") long orderId);
+
+    List<BoostingDetail> queryProgressByOrderId(@Param("orderId") long orderId);
 }
