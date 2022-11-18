@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -32,7 +33,7 @@ public class LoginCache {
 
     public void clearTimeoutCache() {
         USER_TOKEN_SET.removeIf(userToken -> {
-            boolean removed = System.currentTimeMillis() - userToken.getLoginTime() >= 1000 * 60 * 60 * 2;
+            boolean removed = System.currentTimeMillis() - userToken.getLoginTime() >= 1000 * 60 * 20;
             if (removed) {
                 LOGGER.info("user token timeout,removed. user token: {}", userToken);
             }
@@ -41,8 +42,15 @@ public class LoginCache {
     }
 
     public boolean isTokenValid(String token) {
-        return USER_TOKEN_SET
+        Optional<UserToken> any = USER_TOKEN_SET
                 .stream()
-                .anyMatch(item -> item.getToken().equals(token));
+                .filter(item -> item.getToken().equals(token))
+                .findAny();
+        if (any.isPresent()) {
+            any.get().setLoginTime(System.currentTimeMillis());
+            return true;
+        } else {
+            return false;
+        }
     }
 }
