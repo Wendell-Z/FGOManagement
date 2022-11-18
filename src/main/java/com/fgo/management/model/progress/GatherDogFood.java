@@ -13,6 +13,5 @@ public class GatherDogFood extends BoostingProgress {
     private int doneCount;
     private int fightCount;
     private int activePowerCost;
-    private String status;
 
 }

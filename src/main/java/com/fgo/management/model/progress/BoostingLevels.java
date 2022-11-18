@@ -11,6 +11,5 @@ public class BoostingLevels extends BoostingProgress {
 
     private String type;
     private String progress;
-    private String status;
 
 }

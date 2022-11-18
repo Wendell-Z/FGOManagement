@@ -13,7 +13,6 @@ public class BoostingEvents extends BoostingProgress {
     private String eventName;
     private String boostingContent;
     private String progress;
-    private String status;
 
 
 }

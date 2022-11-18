@@ -7,12 +7,10 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class GatherMaterials extends BoostingProgress {
+public class GatherQP extends BoostingProgress {
 
-    private String materialName;
     private int total;
     private int doneCount;
+    private int fightCount;
     private int activePowerCost;
-
-
 }

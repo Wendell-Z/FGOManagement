@@ -14,6 +14,5 @@ public class FollowerFetters extends BoostingProgress {
     private int starLevel;
     private int fettersLevel;
     private int finalFettersLevel;
-    private String status;
 
 }

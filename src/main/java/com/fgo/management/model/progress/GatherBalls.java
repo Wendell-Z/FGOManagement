@@ -11,6 +11,5 @@ public class GatherBalls extends BoostingProgress {
 
     private int ballsCount;
     private int completedBalls;
-    private String status;
 
 }
