@@ -71,6 +71,17 @@ public class UpdateProgressTask {
         long refreshTime = progressOverview.getRefreshTime();
         Timestamp refreshTimestamp = new Timestamp(refreshTime);
         List<BoostingDetail> boostingDetails = new ArrayList<>();
+        GatherQP gatherQP = progressOverview.getGatherQP();
+        if (gatherQP != null) {
+            // 直接覆盖
+            BoostingDetail detail = new BoostingDetail();
+            detail.setOrderId(orderId);
+            detail.setLastUpdateTime(refreshTimestamp);
+            detail.setProgress(JSONUtil.toJsonStr(gatherQP));
+            detail.setBusinessType(BusinessType.GatherQP.name());
+            // 可以直接更新
+            boostingDetails.add(detail);
+        }
         Daily daily = progressOverview.getDaily();
         if (daily != null) {
             // 直接覆盖

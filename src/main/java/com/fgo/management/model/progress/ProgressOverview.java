@@ -19,4 +19,5 @@ public class ProgressOverview {
     private List<FollowerFetters> FollowerFetters;
     private List<Follower> Follower;
     private List<PurchaseLevels> purchaseLevels;
+    private GatherQP gatherQP;
 }
