@@ -27,7 +27,7 @@
           AND businessType = #{businessType}
     </delete>
     <select id="queryByOrderId" resultType="com.fgo.management.model.BoostingDetail">
-        SELECT DISTINCT businessType
+        SELECT orderId, businessType, boostingTask
         FROM boosting_detail
         WHERE orderId = #{orderId}
     </select>
