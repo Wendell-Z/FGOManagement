@@ -18,7 +18,7 @@ public class Follower extends BoostingProgress {
     private int skill2Level;
     private int skill3Level;
     private boolean levelBreak;
-    private boolean SkillBreak;
+    private boolean skillBreak;
     private boolean holyGrailChange;
     private int holyGrailTotal;
 

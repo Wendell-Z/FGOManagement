@@ -20,6 +20,14 @@
         ON DUPLICATE KEY UPDATE boostingTask = #{bean.boostingTask},
                                 status       = 'N'
     </insert>
+    <update id="update">
+        UPDATE boosting_detail
+        SET boostingTask = #{bean.boostingTask},
+            status       = #{bean.status},
+            progress     = #{bean.progress}
+        WHERE orderId = #{bean.orderId}
+          AND businessType = #{bean.businessType}
+    </update>
     <delete id="delete">
         DELETE
         FROM boosting_detail
@@ -35,6 +43,14 @@
         SELECT businessType, progress
         FROM boosting_detail
         WHERE orderId = #{orderId}
+    </select>
+    <select id="queryByOrderIdAndTypeWithLock" resultType="com.fgo.management.model.BoostingDetail">
+        select *
+        from boosting_detail
+        where orderId = #{orderId}
+          AND businessType = #{type}
+            for
+        update
     </select>
 
 </mapper>

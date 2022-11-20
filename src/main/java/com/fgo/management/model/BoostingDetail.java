@@ -1,5 +1,6 @@
 package com.fgo.management.model;
 
+import com.fgo.management.enums.OperateType;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
@@ -26,4 +27,10 @@ public class BoostingDetail {
     private Timestamp createTime;
 
     private Timestamp lastUpdateTime;
+
+    /**
+     * ADD UPDATE 单条 也得查询遍历 判断 才能知道是增 还是改
+     * DELETE 我想让他传整体 这样我直接覆盖就行
+     */
+    private OperateType operateType;
 }

@@ -14,6 +14,6 @@ public class SignIn extends BoostingProgress {
 
     private int daysOfSignedIn;
 
-    private String lastSignTime;
+    private String lastSignInTime;
 
 }
