@@ -33,4 +33,8 @@ public interface OrderDetailMapper {
 
 
     void batchUpdateOrderStatus(@Param("list") List<String> orderIds, @Param("status") OrderStatus orderStatus);
+
+    List<OrderDetail> queryByUpdateStatus(@Param("updateStatus") String updateStatus);
+
+    void updateProgress(@Param("bean") OrderDetail orderDetail);
 }

@@ -180,5 +180,13 @@ public class OrderDetailService {
             orderDetailMapper.batchUpdateOrderStatus(orderIds, orderStatus);
         }
     }
+
+    public List<OrderDetail> queryByUpdateStatus(String updateStatus) {
+        return orderDetailMapper.queryByUpdateStatus(updateStatus);
+    }
+
+    public void updateProgress(OrderDetail orderDetail) {
+        orderDetailMapper.updateProgress(orderDetail);
+    }
 }
 

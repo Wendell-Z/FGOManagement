@@ -67,4 +67,5 @@ public class OrderDetail {
     private String boostingTask;
     private String boostingProgress;
     private String accountSituation;
+    private String updateStatus;
 }

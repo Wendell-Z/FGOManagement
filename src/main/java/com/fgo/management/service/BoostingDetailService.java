@@ -113,7 +113,7 @@ public class BoostingDetailService {
                     material.setStatus("N");
                     material.setActivePowerCost(0);
                     material.setCreateTime(new Timestamp(System.currentTimeMillis()));
-                    material.setLastUpdateTime("");
+                    material.setLastUpdateTime(new Timestamp(0));
                     material.setDoneCount(0);
                     newMaterialList.add(material);
                 });
@@ -200,5 +200,13 @@ public class BoostingDetailService {
 
     public List<BoostingDetail> queryProgressByOrderId(long orderId) {
         return businessDetailMapper.queryProgressByOrderId(orderId);
+    }
+
+    public void updateProgress(List<BoostingDetail> boostingDetails) {
+        businessDetailMapper.updateProgress(boostingDetails);
+    }
+
+    public BoostingDetail queryByOrderIdAndTypeWithLock(long orderId, BusinessType type) {
+        return businessDetailMapper.queryByOrderIdAndTypeWithLock(orderId, type);
     }
 }

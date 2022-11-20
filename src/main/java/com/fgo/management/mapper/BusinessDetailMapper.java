@@ -22,4 +22,6 @@ public interface BusinessDetailMapper {
     BoostingDetail queryByOrderIdAndTypeWithLock(@Param("orderId") long orderId, @Param("type") BusinessType businessType);
 
     void update(@Param("bean") BoostingDetail existed);
+
+    void updateProgress(@Param("list") List<BoostingDetail> p);
 }

@@ -70,6 +70,19 @@
             #{item}
         </foreach>
     </update>
+    <update id="updateProgress">
+        UPDATE order_detail
+        SET rockAtStart       = #{bean.rockAtStart},
+            fruitAtStart      = #{bean.fruitAtStart},
+            fruitAtCurrent    = #{bean.fruitAtCurrent},
+            rockAtCurrent= #{bean.fruitAtCurrent},
+            status            = #{bean.status},
+            recentlyLoginTime = #{bean.recentlyLoginTime},
+            exceptionMessage  = #{bean.exceptionMessage},
+            updateStatus      = 'N',
+            battleCount       = #{bean.battleCount}
+        where id = #{bean.id}
+    </update>
     <select id="queryOrderDetails" resultType="com.fgo.management.model.OrderDetail">
         SELECT id,
         orderNumber,
@@ -137,6 +150,11 @@
         SELECT boostingProgress
         FROM order_detail
         WHERE id = #{orderId}
+    </select>
+    <select id="queryByUpdateStatus" resultType="com.fgo.management.model.OrderDetail">
+        SELECT id, boostingProgress
+        from order_detail
+        where updateStatus = #{updateStatus}
     </select>
 
 </mapper>

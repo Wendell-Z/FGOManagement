@@ -28,6 +28,16 @@
         WHERE orderId = #{bean.orderId}
           AND businessType = #{bean.businessType}
     </update>
+    <update id="updateProgress">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update boosting_detail
+            SET
+            lastUpdateTime=#{item.name},
+            progress = #{item.progress}
+            where orderId = #{item.orderId}
+            and businessType = #{item.businessType}
+        </foreach>
+    </update>
     <delete id="delete">
         DELETE
         FROM boosting_detail
