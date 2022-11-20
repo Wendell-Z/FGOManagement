@@ -175,6 +175,12 @@ public class OrderDetailService {
         if (boostingDetailMap.containsKey(BusinessType.PurchaseLevels)) {
             progressOverview.setPurchaseLevels(JSONUtil.toList(boostingDetailMap.get(BusinessType.PurchaseLevels).getProgress(), PurchaseLevels.class));
         }
+        if (boostingDetailMap.containsKey(BusinessType.BoostingLevels)) {
+            progressOverview.setBoostingLevels(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevels).getProgress(), BoostingLevels.class));
+        }
+        if (boostingDetailMap.containsKey(BusinessType.GatherQP)) {
+            progressOverview.setGatherQP(JSONUtil.toBean(boostingDetailMap.get(BusinessType.GatherQP).getProgress(), GatherQP.class));
+        }
         return progressOverview;
     }
 
