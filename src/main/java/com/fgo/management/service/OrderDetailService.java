@@ -21,10 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,16 +61,17 @@ public class OrderDetailService {
 
     @Transactional(rollbackFor = Exception.class)
     @OrderDetailToJson
-    public void updateOrderStatus(OrderStatusInfo orderStatusInfo) {
+    public String updateOrderStatus(OrderStatusInfo orderStatusInfo) {
         if (OrderStatus.RUNNING == orderStatusInfo.getOrderStatus()) {
             // 如果是启动的逻辑 要重新梳理 至少判断出启动后 查看去启动哪个业务 设置业务内容
-            startBoosting(orderStatusInfo);
+            return startBoosting(orderStatusInfo);
         } else {
             orderDetailMapper.updateOrderStatus(orderStatusInfo);
         }
+        return Constants.EMPTY_STRING;
     }
 
-    private void startBoosting(OrderStatusInfo orderStatusInfo) {
+    private String startBoosting(OrderStatusInfo orderStatusInfo) {
         long orderId = orderStatusInfo.getOrderId();
         OrderDetail orderDetail = orderDetailMapper.queryByOrderId(orderId);
         // LOCK EVERY order with same account
@@ -86,7 +84,7 @@ public class OrderDetailService {
         if (!runningOrders.isEmpty()) {
             long id = runningOrders.get(0).getId();
             String playerAccount = runningOrders.get(0).getPlayerAccount();
-            throw new RuntimeException(String.format("订单ID:%s,是同账号%s玩家，已经在代练中，请先关闭后再开启当前订单的代练！", id, playerAccount));
+            return String.format("订单ID:%s,是同账号%s玩家，已经在代练中，请先关闭后再开启当前订单的代练！", id, playerAccount);
         } else {
             ParamConfig paramConfig = paramConfigService.queryByParam("BUSINESS", "ORDER");
             List<BusinessOrder> businessOrders = JSONUtil.toList(paramConfig.getParamValue(), BusinessOrder.class);
@@ -96,6 +94,7 @@ public class OrderDetailService {
                     .collect(Collectors.toList());
             List<BoostingDetail> boostingDetails = boostingDetailService.queryByOrderId(orderStatusInfo.getOrderId());
             BoostingDetail target = null;
+            List<BoostingDetail> executeList = new ArrayList<>();
             for (BusinessOrder businessOrder : businessOrders) {
                 Optional<BoostingDetail> any = boostingDetails
                         .stream()
@@ -103,15 +102,19 @@ public class OrderDetailService {
                         .findAny();
                 if (any.isPresent()) {
                     target = any.get();
-                    break;
+                    executeList.add(target);
                 }
             }
-            if (target == null) {
-                throw new RuntimeException("未找到对应的业务类型顺序!");
+            if (!executeList.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                executeList.forEach(item -> sb.append(item.getBoostingTask()).append(";"));
+                orderDetailMapper.setOrderBoostingTask(new OrderBoostingInfo(target.getOrderId(), sb.toString()));
+                orderDetailMapper.updateOrderStatus(orderStatusInfo);
+            } else {
+                throw new RuntimeException("未设置代练业务！");
             }
-            orderDetailMapper.setOrderBoostingTask(new OrderBoostingInfo(target.getOrderId(), target.getBoostingTask()));
-            orderDetailMapper.updateOrderStatus(orderStatusInfo);
         }
+        return Constants.EMPTY_STRING;
     }
 
     @OrderDetailToJson

@@ -45,8 +45,7 @@ public class OrderController {
     @PutMapping("/status")
     @LoginValid
     public MyResponse updateOrderStatus(HttpServletRequest request, @Validated @RequestBody OrderStatusInfo orderStatusInfo) {
-        orderDetailService.updateOrderStatus(orderStatusInfo);
-        return MyResponse.success();
+        return MyResponse.success(orderDetailService.updateOrderStatus(orderStatusInfo));
     }
 
     @PostMapping("/settled")
