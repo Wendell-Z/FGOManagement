@@ -48,7 +48,7 @@ public class BusinessController {
 
     @GetMapping("/order")
     @LoginValid
-    public MyResponse businessOrder() {
+    public MyResponse businessOrder(HttpServletRequest request) {
         ParamConfig paramConfig = paramConfigService.queryByParam("BUSINESS", "ORDER");
         return MyResponse.success(JSONUtil.toList(paramConfig.getParamValue(), BusinessOrder.class)
                 .stream()
