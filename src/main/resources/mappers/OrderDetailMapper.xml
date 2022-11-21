@@ -83,6 +83,11 @@
             battleCount       = #{bean.battleCount}
         where id = #{bean.id}
     </update>
+    <update id="updateToSyncFollower">
+        UPDATE order_detail
+        SET accountSituation = 'SYNC'
+        where id = #{id}
+    </update>
     <select id="queryOrderDetails" resultType="com.fgo.management.model.OrderDetail">
         SELECT id,
         orderNumber,
@@ -155,6 +160,12 @@
         SELECT id, boostingProgress
         from order_detail
         where updateStatus = #{updateStatus}
+    </select>
+    <select id="queryFollowerInfoByOrderId" resultType="java.lang.String">
+        SELECT accountSituation
+        from order_detail
+        where id = #{id}
+          and accountSituation != 'SYNC'
     </select>
 
 </mapper>

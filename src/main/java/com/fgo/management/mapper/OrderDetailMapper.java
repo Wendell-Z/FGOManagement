@@ -37,4 +37,8 @@ public interface OrderDetailMapper {
     List<OrderDetail> queryByUpdateStatus(@Param("updateStatus") String updateStatus);
 
     void updateProgress(@Param("bean") OrderDetail orderDetail);
+
+    int updateToSyncFollower(@Param("id") long orderId);
+
+    String queryFollowerInfoByOrderId(@Param("id") long orderId);
 }

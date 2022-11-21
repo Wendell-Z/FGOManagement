@@ -15,6 +15,7 @@ import com.fgo.management.model.progress.*;
 import com.fgo.management.utils.BeanUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -209,6 +210,14 @@ public class OrderDetailService {
 
     public void updateProgress(OrderDetail orderDetail) {
         orderDetailMapper.updateProgress(orderDetail);
+    }
+
+    public int updateToSyncFollower(long orderId) {
+        return orderDetailMapper.updateToSyncFollower(orderId);
+    }
+
+    public String queryFollowerInfoByOrderId(@Param("id") long orderId) {
+        return orderDetailMapper.queryFollowerInfoByOrderId(orderId);
     }
 }
 

@@ -1,5 +1,6 @@
 package com.fgo.management.service;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.fgo.management.enums.BusinessType;
@@ -7,7 +8,9 @@ import com.fgo.management.enums.OperateType;
 import com.fgo.management.mapper.BusinessDetailMapper;
 import com.fgo.management.model.BoostingDetail;
 import com.fgo.management.model.progress.GatherMaterials;
+import com.fgo.management.model.progress.ProgressOverview;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,9 @@ import java.util.stream.Collectors;
 public class BoostingDetailService {
     @Autowired
     private BusinessDetailMapper businessDetailMapper;
+    @Autowired
+    @Lazy
+    private OrderDetailService orderDetailService;
 
     @Transactional
     public void merge(BoostingDetail boostingDetail) {
@@ -208,5 +214,30 @@ public class BoostingDetailService {
 
     public BoostingDetail queryByOrderIdAndTypeWithLock(long orderId, BusinessType type) {
         return businessDetailMapper.queryByOrderIdAndTypeWithLock(orderId, type);
+    }
+
+    public ProgressOverview getFollowerInfo(long orderId) {
+        // 先改状态 为SYNC
+        int rows = orderDetailService.updateToSyncFollower(orderId);
+        if (rows == 1) {
+            // 改成功后 直接不停扫描
+            String followerInfo = orderDetailService.queryFollowerInfoByOrderId(orderId);
+            int retry = 0;
+            while (StrUtil.isBlank(followerInfo) && retry <= 30) {
+                try {
+                    Thread.sleep(1000);
+                    retry++;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (StrUtil.isBlank(followerInfo)) {
+                throw new RuntimeException("查询超时请重试！");
+            } else {
+                return JSONUtil.toBean(followerInfo, ProgressOverview.class);
+            }
+        } else {
+            throw new RuntimeException("查询失败！请返回主页重试！");
+        }
     }
 }

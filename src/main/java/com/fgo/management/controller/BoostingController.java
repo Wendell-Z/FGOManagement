@@ -33,5 +33,10 @@ public class BoostingController {
         return MyResponse.success();
     }
 
+    @GetMapping("/info/follower")
+    public MyResponse getFollowerInfo(HttpServletRequest request, @RequestParam("orderId") long orderId) {
+        return MyResponse.success(boostingDetailService.getFollowerInfo(orderId));
+    }
+
 
 }
