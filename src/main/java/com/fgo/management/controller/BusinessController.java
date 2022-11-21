@@ -2,6 +2,7 @@ package com.fgo.management.controller;
 
 import cn.hutool.json.JSONUtil;
 import com.fgo.management.annotations.LoginValid;
+import com.fgo.management.dto.GlobalActivePower;
 import com.fgo.management.dto.MyResponse;
 import com.fgo.management.model.BusinessOrder;
 import com.fgo.management.model.ParamConfig;
@@ -27,12 +28,20 @@ public class BusinessController {
 
     @PutMapping("/event/activePower")
     @LoginValid
-    public MyResponse setEventActivePower(HttpServletRequest request, @Validated @RequestBody ParamConfig paramConfig) {
-        paramConfigService.updateParamValue(paramConfig.getRootParam(), paramConfig.getSubParam(), paramConfig.getParamValue());
+    public MyResponse setEventActivePower(HttpServletRequest request, @Validated @RequestBody GlobalActivePower globalActivePower) {
+        paramConfigService.updateParamValue("EVENT", "ACTIVE_POWER", JSONUtil.toJsonStr(globalActivePower));
         return MyResponse.success();
     }
 
-    @PostMapping("/order")
+    @GetMapping("/event/activePower")
+    @LoginValid
+    public MyResponse get(HttpServletRequest request) {
+        GlobalActivePower globalActivePower = JSONUtil.toBean(paramConfigService.queryByParam("EVENT", "ACTIVE_POWER")
+                .getParamValue(), GlobalActivePower.class);
+        return MyResponse.success(globalActivePower);
+    }
+
+    @PostMapping("/event/activePower")
     @LoginValid
     public MyResponse businessOrder(HttpServletRequest request, @Validated @RequestBody List<BusinessOrder> businessOrders) {
         paramConfigService.setBusinessOrder(businessOrders);

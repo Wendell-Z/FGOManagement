@@ -1,7 +1,7 @@
 package com.fgo.management.aspects;
 
 import cn.hutool.json.JSONUtil;
-import com.fgo.management.enums.ActivePower;
+import com.fgo.management.dto.GlobalActivePower;
 import com.fgo.management.model.OrderDetail;
 import com.fgo.management.model.ParamConfig;
 import com.fgo.management.service.OrderDetailService;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
-import java.util.Locale;
 
 @Component
 @Aspect
@@ -47,11 +46,10 @@ public class OrderDetailToJsonAspect {
                 Long id = (Long) field.get(arg);
                 OrderDetail orderDetail = orderDetailService.queryOrderDetailById(id);
                 ParamConfig paramConfig = paramConfigService.queryByParam("EVENT", "ACTIVE_POWER");
-                String[] enums = paramConfig.getParamValue().split(",");
-                for (String anEnum : enums) {
-                    ActivePower activePower = ActivePower.valueOf(anEnum);
-                    orderDetail.setFruitEnabled(Boolean.valueOf(activePower == ActivePower.FRUIT).toString().toUpperCase(Locale.ROOT));
-                    orderDetail.setRockEnabled(Boolean.valueOf(activePower == ActivePower.ROCK).toString().toUpperCase(Locale.ROOT));
+                GlobalActivePower globalActivePower = JSONUtil.toBean(paramConfig.getParamValue(), GlobalActivePower.class);
+                if (globalActivePower.isGlobal()) {
+                    globalActivePower.setFruit(globalActivePower.isFruit());
+                    globalActivePower.setRock(globalActivePower.isRock());
                 }
                 orderDetailService.updateOrderSituationById(id, JSONUtil.parse(orderDetail).toString());
             }
