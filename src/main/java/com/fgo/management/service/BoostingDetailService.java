@@ -1,6 +1,5 @@
 package com.fgo.management.service;
 
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.fgo.management.enums.BusinessType;
@@ -217,27 +216,63 @@ public class BoostingDetailService {
     }
 
     public ProgressOverview getFollowerInfo(long orderId) {
-        // 先改状态 为SYNC
-        int rows = orderDetailService.updateToSyncFollower(orderId);
-        if (rows == 1) {
-            // 改成功后 直接不停扫描
-            String followerInfo = orderDetailService.queryFollowerInfoByOrderId(orderId);
-            int retry = 0;
-            while (StrUtil.isBlank(followerInfo) && retry <= 30) {
-                try {
-                    Thread.sleep(1000);
-                    retry++;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (StrUtil.isBlank(followerInfo)) {
-                throw new RuntimeException("查询超时请重试！");
-            } else {
-                return JSONUtil.toBean(followerInfo, ProgressOverview.class);
-            }
-        } else {
-            throw new RuntimeException("查询失败！请返回主页重试！");
-        }
+        String s = "{\n" +
+                "    \"followerFetters\": [\n" +
+                "        {\n" +
+                "            \"profession\": \"saber\",\n" +
+                "            \"followerName\": \"\",\n" +
+                "            \"starLevel\": 0,\n" +
+                "            \"fettersLevel\": 0,\n" +
+                "            \"finalFettersLevel\": 0,\n" +
+                "            \"status\": \"N\",\n" +
+                "            \"createTime\": 0,\n" +
+                "            \"lastUpdateTime\": \"\"\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    \"follower\": [\n" +
+                "        {\n" +
+                "            \"profession\": \"saber\",\n" +
+                "            \"followerName\": \"saber\",\n" +
+                "            \"starLevel\": 0,\n" +
+                "            \"comeAgainLevel\": 0,\n" +
+                "            \"followerLevel\": 0,\n" +
+                "            \"skill1Level\": 0,\n" +
+                "            \"skill2Level\": 0,\n" +
+                "            \"skill3Level\": 0,\n" +
+                "            \"levelBreak\": true,\n" +
+                "            \"skillBreak\": true,\n" +
+                "            \"holyGrailChange\": true,\n" +
+                "            \"holyGrailTotal\": 111,\n" +
+                "            \"status\": \"N\",\n" +
+                "            \"createTime\": 0,\n" +
+                "            \"lastUpdateTime\": \"\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}";
+        return JSONUtil.toBean(s, ProgressOverview.class);
+
+//        // 先改状态 为SYNC
+//        int rows = orderDetailService.updateToSyncFollower(orderId);
+//        if (rows == 1) {
+//            // 改成功后 直接不停扫描
+//            String followerInfo = orderDetailService.queryFollowerInfoByOrderId(orderId);
+//            int retry = 0;
+//            while (StrUtil.isBlank(followerInfo) && retry <= 30) {
+//                try {
+//                    Thread.sleep(1000);
+//                    retry++;
+//                    followerInfo = orderDetailService.queryFollowerInfoByOrderId(orderId);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//            if (StrUtil.isBlank(followerInfo)) {
+//                throw new RuntimeException("查询超时请重试！");
+//            } else {
+//                return JSONUtil.toBean(followerInfo, ProgressOverview.class);
+//            }
+//        } else {
+//            throw new RuntimeException("查询失败！请返回主页重试！");
+//        }
     }
 }

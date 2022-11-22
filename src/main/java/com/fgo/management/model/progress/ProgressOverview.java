@@ -16,8 +16,8 @@ public class ProgressOverview {
     private GatherGreenSquare gatherGreenSquare;
     private List<BoostingEvents> boostingEvents;
     private Daily daily;
-    private List<FollowerFetters> FollowerFetters;
-    private List<Follower> Follower;
+    private List<FollowerFetters> followerFetters;
+    private List<Follower> follower;
     private List<PurchaseLevels> purchaseLevels;
     private GatherQP gatherQP;
 }
