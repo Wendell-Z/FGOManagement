@@ -184,16 +184,16 @@ public class OrderDetailService {
             progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevels).getProgress(), BoostingLevels.class));
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfHunting)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevels).getProgress(), BoostingLevels.class));
+            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfHunting).getProgress(), BoostingLevels.class));
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfStory)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevels).getProgress(), BoostingLevels.class));
+            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfStory).getProgress(), BoostingLevels.class));
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfStrengthen)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevels).getProgress(), BoostingLevels.class));
+            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfStrengthen).getProgress(), BoostingLevels.class));
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfPractice)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevels).getProgress(), BoostingLevels.class));
+            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfPractice).getProgress(), BoostingLevels.class));
         }
         return progressOverview;
     }
