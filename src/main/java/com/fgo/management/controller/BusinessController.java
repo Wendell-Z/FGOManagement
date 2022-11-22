@@ -41,8 +41,7 @@ public class BusinessController {
         return MyResponse.success(globalActivePower);
     }
 
-    @Deprecated
-    @PostMapping("/event/activePower")
+    @PostMapping("/order")
     @LoginValid
     public MyResponse businessOrder(HttpServletRequest request, @Validated @RequestBody List<BusinessOrder> businessOrders) {
         paramConfigService.setBusinessOrder(businessOrders);
