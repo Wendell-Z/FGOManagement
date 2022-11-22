@@ -73,6 +73,7 @@ public class OrderDetailService {
     }
 
     private String startBoosting(OrderStatusInfo orderStatusInfo) {
+        String message = Constants.EMPTY_STRING;
         long orderId = orderStatusInfo.getOrderId();
         OrderDetail orderDetail = orderDetailMapper.queryByOrderId(orderId);
         // LOCK EVERY order with same account
@@ -85,37 +86,36 @@ public class OrderDetailService {
         if (!runningOrders.isEmpty()) {
             long id = runningOrders.get(0).getId();
             String playerAccount = runningOrders.get(0).getPlayerAccount();
-            return String.format("订单ID:%s,是同账号%s玩家，已经在代练中，请先关闭后再开启当前订单的代练！", id, playerAccount);
-        } else {
-            ParamConfig paramConfig = paramConfigService.queryByParam("BUSINESS", "ORDER");
-            List<BusinessOrder> businessOrders = JSONUtil.toList(paramConfig.getParamValue(), BusinessOrder.class);
-            businessOrders = businessOrders
+            message = String.format("订单ID:%s,是同账号%s玩家，已经在代练中，当前订单不会立即开始代练！", id, playerAccount);
+        }
+        ParamConfig paramConfig = paramConfigService.queryByParam("BUSINESS", "ORDER");
+        List<BusinessOrder> businessOrders = JSONUtil.toList(paramConfig.getParamValue(), BusinessOrder.class);
+        businessOrders = businessOrders
+                .stream()
+                .sorted(Comparator.comparing(BusinessOrder::getOrder))
+                .collect(Collectors.toList());
+        List<BoostingDetail> boostingDetails = boostingDetailService.queryByOrderId(orderStatusInfo.getOrderId());
+        BoostingDetail target = null;
+        List<BoostingDetail> executeList = new ArrayList<>();
+        for (BusinessOrder businessOrder : businessOrders) {
+            Optional<BoostingDetail> any = boostingDetails
                     .stream()
-                    .sorted(Comparator.comparing(BusinessOrder::getOrder))
-                    .collect(Collectors.toList());
-            List<BoostingDetail> boostingDetails = boostingDetailService.queryByOrderId(orderStatusInfo.getOrderId());
-            BoostingDetail target = null;
-            List<BoostingDetail> executeList = new ArrayList<>();
-            for (BusinessOrder businessOrder : businessOrders) {
-                Optional<BoostingDetail> any = boostingDetails
-                        .stream()
-                        .filter(item -> item.getBusinessType().equals(businessOrder.getBusinessType()))
-                        .findAny();
-                if (any.isPresent()) {
-                    target = any.get();
-                    executeList.add(target);
-                }
-            }
-            if (!executeList.isEmpty()) {
-                StringBuilder sb = new StringBuilder();
-                executeList.forEach(item -> sb.append(item.getBoostingTask()).append(";"));
-                orderDetailMapper.setOrderBoostingTask(new OrderBoostingInfo(target.getOrderId(), sb.toString()));
-                orderDetailMapper.updateOrderStatus(orderStatusInfo);
-            } else {
-                throw new RuntimeException("未设置代练业务！");
+                    .filter(item -> item.getBusinessType().equals(businessOrder.getBusinessType()))
+                    .findAny();
+            if (any.isPresent()) {
+                target = any.get();
+                executeList.add(target);
             }
         }
-        return Constants.EMPTY_STRING;
+        if (!executeList.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            executeList.forEach(item -> sb.append(item.getBoostingTask()).append(";"));
+            orderDetailMapper.setOrderBoostingTask(new OrderBoostingInfo(target.getOrderId(), sb.toString()));
+            orderDetailMapper.updateOrderStatus(orderStatusInfo);
+        } else {
+            throw new RuntimeException("未设置代练业务！");
+        }
+        return message;
     }
 
     @OrderDetailToJson
