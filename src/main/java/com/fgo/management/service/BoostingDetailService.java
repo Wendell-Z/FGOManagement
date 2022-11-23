@@ -99,9 +99,9 @@ public class BoostingDetailService {
             existed.setBoostingTask(sb.toString());
             // 进度也要删
             String progress = existed.getProgress();
-            JSONArray objects = JSONUtil.parseArray(progress);
-            objects.remove(name);
-            existed.setProgress(JSONUtil.toJsonStr(objects));
+            List<GatherMaterials> gatherMaterials = JSONUtil.toList(progress, GatherMaterials.class);
+            gatherMaterials.removeIf(item -> item.getMaterialName().equals(name));
+            existed.setProgress(JSONUtil.toJsonStr(gatherMaterials));
             businessDetailMapper.update(existed);
         }
     }
