@@ -59,7 +59,12 @@ public class BoostingDetailService {
                     businessDetailMapper.update(existed);
                 }
                 if (OperateType.DELETE == operateType) {
-                    removeByIndex(boostingDetail, existed);
+                    if (BusinessType.GatherMaterials == type) {
+                        removeByName(boostingDetail, existed);
+                    } else {
+                        removeByIndex(boostingDetail, existed);
+                    }
+
                 }
 
             }
@@ -69,6 +74,35 @@ public class BoostingDetailService {
             boostingDetail.setStatus("N");
             boostingDetail.setLastUpdateTime(initTime);
             businessDetailMapper.merge(boostingDetail);
+        }
+    }
+
+    private void removeByName(BoostingDetail boostingDetail, BoostingDetail existed) {
+        long orderId = boostingDetail.getOrderId();
+        String businessType = boostingDetail.getBusinessType();
+        // 匹配任务和进度 删除对应的即可
+        String name = boostingDetail.getProgress();
+        String existedBoostingTask = existed.getBoostingTask();
+        String[] business = existedBoostingTask.split("\\|");
+        List<String> leftBusiness = Arrays.stream(business).collect(Collectors.toList());
+        leftBusiness.removeIf(item -> item.contains(name));
+        if (leftBusiness.isEmpty()) {
+            businessDetailMapper.delete(orderId, businessType);
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < leftBusiness.size(); i++) {
+                sb.append(leftBusiness.get(i));
+                if (i < leftBusiness.size() - 1) {
+                    sb.append("|");
+                }
+            }
+            existed.setBoostingTask(sb.toString());
+            // 进度也要删
+            String progress = existed.getProgress();
+            JSONArray objects = JSONUtil.parseArray(progress);
+            objects.remove(name);
+            existed.setProgress(JSONUtil.toJsonStr(objects));
+            businessDetailMapper.update(existed);
         }
     }
 
