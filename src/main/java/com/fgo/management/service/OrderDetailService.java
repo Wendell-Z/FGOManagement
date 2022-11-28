@@ -7,6 +7,7 @@ import com.fgo.management.common.Constants;
 import com.fgo.management.dto.OrderBoostingInfo;
 import com.fgo.management.dto.OrderStatusInfo;
 import com.fgo.management.dto.QueryOrderCondition;
+import com.fgo.management.enums.BoostingStatus;
 import com.fgo.management.enums.BusinessType;
 import com.fgo.management.enums.OrderStatus;
 import com.fgo.management.mapper.OrderDetailMapper;
@@ -57,6 +58,10 @@ public class OrderDetailService {
     public PageInfo<OrderDetail> pageQueryOrder(QueryOrderCondition condition) {
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), true);
         List<OrderDetail> orderDetails = orderDetailMapper.queryOrderDetails(condition);
+        orderDetails
+                .stream()
+                .filter(item -> OrderStatus.SETTLED == item.getOrderStatus())
+                .forEach(item -> item.setStatus(OrderStatus.SETTLED));
         return new PageInfo<>(orderDetails);
     }
 
@@ -64,9 +69,10 @@ public class OrderDetailService {
     @OrderDetailToJson
     public String updateOrderStatus(OrderStatusInfo orderStatusInfo) {
         if (OrderStatus.RUNNING == orderStatusInfo.getOrderStatus()) {
-            // 如果是启动的逻辑 要重新梳理 至少判断出启动后 查看去启动哪个业务 设置业务内容
+            // 这里实际上只改开关了
             return startBoosting(orderStatusInfo);
         } else {
+            // 这里可能既要改开关又要改状态
             orderDetailMapper.updateOrderStatus(orderStatusInfo);
         }
         return Constants.EMPTY_STRING;
@@ -76,6 +82,9 @@ public class OrderDetailService {
         String message = Constants.EMPTY_STRING;
         long orderId = orderStatusInfo.getOrderId();
         OrderDetail orderDetail = orderDetailMapper.queryByOrderId(orderId);
+        if (OrderStatus.RUNNING == orderDetail.getStatus()) {
+            throw new RuntimeException("该订单已经在运行中！");
+        }
         // LOCK EVERY order with same account
         List<OrderDetail> orderDetailList = orderDetailMapper.queryByPlayerAccountWithLock(orderDetail.getPlayerAccount());
         List<OrderDetail> runningOrders = orderDetailList
@@ -96,7 +105,6 @@ public class OrderDetailService {
                 .collect(Collectors.toList());
         List<BoostingDetail> boostingDetails = boostingDetailService.queryByOrderId(orderStatusInfo.getOrderId());
         BoostingDetail target = null;
-        List<BoostingDetail> executeList = new ArrayList<>();
         for (BusinessOrder businessOrder : businessOrders) {
             Optional<BoostingDetail> any = boostingDetails
                     .stream()
@@ -104,16 +112,18 @@ public class OrderDetailService {
                     .findAny();
             if (any.isPresent()) {
                 target = any.get();
-                executeList.add(target);
+                break;
             }
         }
-        if (!executeList.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            executeList.forEach(item -> sb.append(item.getBoostingTask()).append(";"));
-            orderDetailMapper.setOrderBoostingTask(new OrderBoostingInfo(target.getOrderId(), sb.toString()));
-            orderDetailMapper.updateOrderStatus(orderStatusInfo);
+        if (target != null) {
+            if (BoostingStatus.N.name().equals(target.getStatus())) {
+                orderDetailMapper.setOrderBoostingTask(new OrderBoostingInfo(target.getOrderId(), target.getBoostingTask()));
+                orderDetailMapper.updateOrderStatus(orderStatusInfo);
+            } else {
+                throw new RuntimeException("该订单已完成或处在异常状态，请处理后再启动！");
+            }
         } else {
-            throw new RuntimeException("未设置代练业务！");
+            throw new RuntimeException("该订单还未设置代练业务！");
         }
         return message;
     }

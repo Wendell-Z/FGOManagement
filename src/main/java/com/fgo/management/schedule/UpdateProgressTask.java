@@ -43,19 +43,23 @@ public class UpdateProgressTask {
         LOGGER.info("update progress");
         // 查出来进度数据
         List<OrderDetail> orderDetailList = orderDetailService.queryByUpdateStatus("U");
-        orderDetailList.forEach(item -> updateProgressTask.handleProgress(item));
+        orderDetailList.forEach(item -> {
+            try {
+                updateProgressTask.handleProgress(item);
+            } catch (Exception e) {
+                // ignored
+            }
+        });
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleProgress(OrderDetail item) {
         long orderId = item.getId();
         String boostingProgress = item.getBoostingProgress();
         // 订单本身的信息更新
         OrderDetail orderDetail = JSONUtil.toBean(boostingProgress, OrderDetail.class);
         orderDetail.setId(orderId);
-        if (!StrUtil.isBlank(orderDetail.getExceptionMessage())) {
-            orderDetail.setStatus(OrderStatus.ABNORMAL);
-        }
+
         ProgressOverview progressOverview = JSONUtil.toBean(boostingProgress, ProgressOverview.class);
         handleSingle(orderId, progressOverview);
         boolean success = handleMulti(orderId, progressOverview);
@@ -63,6 +67,19 @@ public class UpdateProgressTask {
             orderDetail.setUpdateStatus("N");
         } else {
             orderDetail.setUpdateStatus("U");
+        }
+        // 更新某个业务的状态
+        // 查询该订单所有的状态
+        if (!StrUtil.isBlank(orderDetail.getExceptionMessage())) {
+            // 活动结束未完成 异常 密码问题 AP不足 黑名单
+            orderDetail.setOrderStatus(OrderStatus.ABNORMAL);
+            orderDetail.setStatus(OrderStatus.STOPPED);
+        } else {
+            // 已完成 查询该订单下所有进度 是否是非未完成的就行
+            int count = boostingDetailService.queryUnfinishedBoosting(orderId);
+            if (count == 0) {
+                orderDetail.setOrderStatus(OrderStatus.FINISHED);
+            }
         }
         orderDetailService.updateProgress(orderDetail);
     }
@@ -79,6 +96,7 @@ public class UpdateProgressTask {
             detail.setLastUpdateTime(refreshTimestamp);
             detail.setProgress(JSONUtil.toJsonStr(gatherQP));
             detail.setBusinessType(BusinessType.GatherQP.name());
+            detail.setStatus(gatherQP.getStatus());
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -90,6 +108,7 @@ public class UpdateProgressTask {
             detail.setLastUpdateTime(refreshTimestamp);
             detail.setProgress(JSONUtil.toJsonStr(daily));
             detail.setBusinessType(BusinessType.Daily.name());
+            detail.setBoostingTask(daily.getStatus());
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -101,6 +120,7 @@ public class UpdateProgressTask {
             detail.setLastUpdateTime(refreshTimestamp);
             detail.setProgress(JSONUtil.toJsonStr(daily));
             detail.setBusinessType(BusinessType.GatherGreenSquare.name());
+            detail.setStatus(gatherGreenSquare.getStatus());
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -112,6 +132,7 @@ public class UpdateProgressTask {
             detail.setLastUpdateTime(refreshTimestamp);
             detail.setProgress(JSONUtil.toJsonStr(gatherDogFood));
             detail.setBusinessType(BusinessType.GatherDogFood.name());
+            detail.setStatus(gatherDogFood.getStatus());
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -123,6 +144,7 @@ public class UpdateProgressTask {
             detail.setLastUpdateTime(refreshTimestamp);
             detail.setProgress(JSONUtil.toJsonStr(gatherBalls));
             detail.setBusinessType(BusinessType.GatherBalls.name());
+            detail.setStatus(gatherBalls.getStatus());
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -134,12 +156,13 @@ public class UpdateProgressTask {
             detail.setLastUpdateTime(refreshTimestamp);
             detail.setProgress(JSONUtil.toJsonStr(signIn));
             detail.setBusinessType(BusinessType.SignIn.name());
+            detail.setStatus(signIn.getStatus());
             // 可以直接更新
             boostingDetails.add(detail);
         }
         List<BoostingLevels> boostingLevels = progressOverview.getBoostingLevels();
         if (!CollectionUtil.isEmpty(boostingLevels)) {
-            boostingLevels.forEach(levels -> {
+            for (BoostingLevels levels : boostingLevels) {
                 String type = levels.getType();
                 // 直接覆盖
                 BoostingDetail detail = new BoostingDetail();
@@ -147,11 +170,11 @@ public class UpdateProgressTask {
                 detail.setLastUpdateTime(refreshTimestamp);
                 detail.setProgress(JSONUtil.toJsonStr(levels));
                 detail.setBusinessType(type);
+                detail.setStatus(levels.getStatus());
                 // 可以直接更新
                 boostingDetails.add(detail);
-            });
+            }
         }
-
         boostingDetailService.updateProgress(boostingDetails);
     }
 

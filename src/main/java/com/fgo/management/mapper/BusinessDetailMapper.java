@@ -24,4 +24,6 @@ public interface BusinessDetailMapper {
     void update(@Param("bean") BoostingDetail existed);
 
     void updateProgress(@Param("list") List<BoostingDetail> p);
+
+    int queryUnfinishedBoosting(@Param("orderId") long orderId);
 }

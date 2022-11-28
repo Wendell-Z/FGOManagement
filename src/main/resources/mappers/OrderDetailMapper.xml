@@ -49,7 +49,8 @@
     </update>
     <update id="updateOrderStatus">
         UPDATE order_detail
-        SET `status` = #{statusInfo.orderStatus}
+        SET `status`    = #{statusInfo.orderStatus},
+            orderStatus = #{statusInfo.orderStatus}
         WHERE id = #{statusInfo.orderId}
     </update>
     <update id="setOrderBoostingTask">
@@ -64,7 +65,8 @@
     </update>
     <update id="batchUpdateOrderStatus">
         UPDATE fgomanagement.order_detail
-        SET fgomanagement.order_detail.status = #{status}
+        SET fgomanagement.order_detail.orderStatus = #{status},
+        status = 'STOPPED'
         WHERE id IN
         <foreach collection="list" item="item" open="(" close=")" separator=",">
             #{item}
@@ -109,7 +111,8 @@
         exceptionMessage,
         fruitEnabled,
         rockEnabled,
-        boostingTask
+        boostingTask,
+        orderStatus
         FROM order_detail
         <where>
             1 = 1
@@ -118,7 +121,14 @@
                 OR playerAccount LIKE CONCAT('%', #{condition.queryStr},'%'))
             </if>
             <if test="condition.status != null and !condition.status.isEmpty()">
-                AND status = #{condition.status}
+                <choose>
+                    <when test="condition.status.equals('UNFINISHED')">
+                        AND orderStatus != 'FINISHED'
+                    </when>
+                    <otherwise>
+                        AND orderStatus = #{condition.status}
+                    </otherwise>
+                </choose>
             </if>
         </where>
         ORDER BY createTime

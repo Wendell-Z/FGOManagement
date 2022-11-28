@@ -309,4 +309,12 @@ public class BoostingDetailService {
 //            throw new RuntimeException("查询失败！请返回主页重试！");
 //        }
     }
+
+    public int queryUnfinishedBoosting(long orderId) {
+        try {
+            return businessDetailMapper.queryUnfinishedBoosting(orderId);
+        } catch (Exception e) {
+            throw new RuntimeException("查询未完成的代练任务失败!");
+        }
+    }
 }

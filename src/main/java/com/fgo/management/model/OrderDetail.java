@@ -42,7 +42,6 @@ public class OrderDetail {
     @Min(value = 0, message = "订单金额最小为0")
     private BigDecimal orderAmount;
 
-    @NotBlank(message = "玩家联系方式不能为空！")
     private String playerContact;
 
     private OrderStatus status;
@@ -68,4 +67,5 @@ public class OrderDetail {
     private String boostingProgress;
     private String accountSituation;
     private String updateStatus;
+    private OrderStatus orderStatus;
 }
