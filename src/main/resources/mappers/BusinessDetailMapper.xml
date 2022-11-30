@@ -32,7 +32,7 @@
         <foreach collection="list" item="item" index="index" open="" close="" separator=";">
             update boosting_detail
             SET
-            lastUpdateTime=#{item.name},
+            lastUpdateTime=#{item.lastUpdateTime},
             progress = #{item.progress},
             status = #{item.status}
             where orderId = #{item.orderId}

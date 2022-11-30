@@ -68,4 +68,8 @@ public class OrderDetail {
     private String accountSituation;
     private String updateStatus;
     private OrderStatus orderStatus;
+
+    public void setRecentlyLoginTime(String recentlyLoginTime) {
+        this.recentlyLoginTime = Timestamp.valueOf(recentlyLoginTime);
+    }
 }

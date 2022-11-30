@@ -47,7 +47,8 @@ public class UpdateProgressTask {
             try {
                 updateProgressTask.handleProgress(item);
             } catch (Exception e) {
-                // ignored
+                e.printStackTrace();
+                LOGGER.error("刷新进度失败！异常:{}", e.getMessage());
             }
         });
     }
