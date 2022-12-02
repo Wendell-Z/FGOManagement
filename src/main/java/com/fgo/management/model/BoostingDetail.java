@@ -33,4 +33,9 @@ public class BoostingDetail {
      * DELETE 我想让他传整体 这样我直接覆盖就行
      */
     private OperateType operateType;
+
+    @NotBlank(message = "代练目标不能为空！")
+    private String target;
+
+    private Timestamp modifyTime;
 }

@@ -23,8 +23,10 @@
     <update id="update">
         UPDATE boosting_detail
         SET boostingTask = #{bean.boostingTask},
+            -- 因为有追加进来 就是待代练的状态
             status       = #{bean.status},
-            progress     = #{bean.progress}
+            progress     = #{bean.progress},
+            modifyTime   = #{bean.modifyTime}
         WHERE orderId = #{bean.orderId}
           AND businessType = #{bean.businessType}
     </update>
@@ -34,9 +36,13 @@
             SET
             lastUpdateTime=#{item.lastUpdateTime},
             progress = #{item.progress},
-            status = #{item.status}
+            status = #{item.status},
+            modifyTime = #{item.modifyTime}
             where orderId = #{item.orderId}
             and businessType = #{item.businessType}
+            <if test="item.status.equals('D')">
+                and modifyTime &lt;= #{item.modifyTime}
+            </if>
         </foreach>
     </update>
     <delete id="delete">
@@ -51,7 +57,7 @@
         WHERE orderId = #{orderId}
     </select>
     <select id="queryProgressByOrderId" resultType="com.fgo.management.model.BoostingDetail">
-        SELECT businessType, progress
+        SELECT businessType, progress, target
         FROM boosting_detail
         WHERE orderId = #{orderId}
     </select>

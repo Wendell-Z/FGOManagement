@@ -6,13 +6,14 @@ import cn.hutool.json.JSONUtil;
 import com.fgo.management.enums.BusinessType;
 import com.fgo.management.enums.OrderStatus;
 import com.fgo.management.model.BoostingDetail;
+import com.fgo.management.model.MultiProgress;
 import com.fgo.management.model.OrderDetail;
 import com.fgo.management.model.progress.*;
 import com.fgo.management.service.BoostingDetailService;
+import com.fgo.management.service.MultiProgressService;
 import com.fgo.management.service.OrderDetailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class UpdateProgressTask {
@@ -37,6 +37,8 @@ public class UpdateProgressTask {
     @Autowired
     @Lazy
     private UpdateProgressTask updateProgressTask;
+    @Autowired
+    private MultiProgressService multiProgressService;
 
     @Scheduled(initialDelay = 1000, fixedDelay = 1000)
     public void updateProgressTask() {
@@ -44,11 +46,12 @@ public class UpdateProgressTask {
         // 查出来进度数据
         List<OrderDetail> orderDetailList = orderDetailService.queryByUpdateStatus("U");
         orderDetailList.forEach(item -> {
+            long id = item.getId();
             try {
                 updateProgressTask.handleProgress(item);
             } catch (Exception e) {
+                LOGGER.error("刷新进度失败！订单ID:{}异常:{}", id, e.getMessage());
                 e.printStackTrace();
-                LOGGER.error("刷新进度失败！异常:{}", e.getMessage());
             }
         });
     }
@@ -60,15 +63,11 @@ public class UpdateProgressTask {
         // 订单本身的信息更新
         OrderDetail orderDetail = JSONUtil.toBean(boostingProgress, OrderDetail.class);
         orderDetail.setId(orderId);
-
         ProgressOverview progressOverview = JSONUtil.toBean(boostingProgress, ProgressOverview.class);
-        handleSingle(orderId, progressOverview);
-        boolean success = handleMulti(orderId, progressOverview);
-        if (success) {
-            orderDetail.setUpdateStatus("N");
-        } else {
-            orderDetail.setUpdateStatus("U");
-        }
+        Timestamp modifyTime = new Timestamp(System.currentTimeMillis());
+        handleSingle(orderId, progressOverview, modifyTime);
+        handleMulti(orderId, progressOverview, modifyTime);
+        orderDetail.setUpdateStatus("N");
         // 更新某个业务的状态
         // 查询该订单所有的状态
         if (!StrUtil.isBlank(orderDetail.getExceptionMessage())) {
@@ -85,7 +84,7 @@ public class UpdateProgressTask {
         orderDetailService.updateProgress(orderDetail);
     }
 
-    private void handleSingle(long orderId, ProgressOverview progressOverview) {
+    private void handleSingle(long orderId, ProgressOverview progressOverview, Timestamp modifyTime) {
         long refreshTime = progressOverview.getRefreshTime();
         Timestamp refreshTimestamp = new Timestamp(refreshTime);
         List<BoostingDetail> boostingDetails = new ArrayList<>();
@@ -98,6 +97,7 @@ public class UpdateProgressTask {
             detail.setProgress(JSONUtil.toJsonStr(gatherQP));
             detail.setBusinessType(BusinessType.GatherQP.name());
             detail.setStatus(gatherQP.getStatus());
+            detail.setModifyTime(modifyTime);
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -110,6 +110,7 @@ public class UpdateProgressTask {
             detail.setProgress(JSONUtil.toJsonStr(daily));
             detail.setBusinessType(BusinessType.Daily.name());
             detail.setBoostingTask(daily.getStatus());
+            detail.setModifyTime(modifyTime);
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -122,6 +123,7 @@ public class UpdateProgressTask {
             detail.setProgress(JSONUtil.toJsonStr(daily));
             detail.setBusinessType(BusinessType.GatherGreenSquare.name());
             detail.setStatus(gatherGreenSquare.getStatus());
+            detail.setModifyTime(modifyTime);
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -134,6 +136,7 @@ public class UpdateProgressTask {
             detail.setProgress(JSONUtil.toJsonStr(gatherDogFood));
             detail.setBusinessType(BusinessType.GatherDogFood.name());
             detail.setStatus(gatherDogFood.getStatus());
+            detail.setModifyTime(modifyTime);
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -146,6 +149,7 @@ public class UpdateProgressTask {
             detail.setProgress(JSONUtil.toJsonStr(gatherBalls));
             detail.setBusinessType(BusinessType.GatherBalls.name());
             detail.setStatus(gatherBalls.getStatus());
+            detail.setModifyTime(modifyTime);
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -158,6 +162,7 @@ public class UpdateProgressTask {
             detail.setProgress(JSONUtil.toJsonStr(signIn));
             detail.setBusinessType(BusinessType.SignIn.name());
             detail.setStatus(signIn.getStatus());
+            detail.setModifyTime(modifyTime);
             // 可以直接更新
             boostingDetails.add(detail);
         }
@@ -172,174 +177,109 @@ public class UpdateProgressTask {
                 detail.setProgress(JSONUtil.toJsonStr(levels));
                 detail.setBusinessType(type);
                 detail.setStatus(levels.getStatus());
+                detail.setModifyTime(modifyTime);
                 // 可以直接更新
                 boostingDetails.add(detail);
             }
         }
-        boostingDetailService.updateProgress(boostingDetails);
+        if (!boostingDetails.isEmpty()) {
+            boostingDetailService.updateProgress(boostingDetails);
+        }
     }
 
-    private boolean handleMulti(long orderId, ProgressOverview progressOverview) {
-        boolean success = true;
+    private void handleMulti(long orderId, ProgressOverview progressOverview, Timestamp modifyTime) {
+        List<MultiProgress> multiProgressList = new ArrayList<>();
         List<Follower> followers = progressOverview.getFollower();
-        if (!CollectionUtil.isEmpty(followers)) {
-            try {
-                updateProgressTask.handleFollowers(orderId, followers);
-            } catch (Exception e) {
-                LOGGER.error("更新从者失败！{}", e.getMessage());
-                success = false;
-            }
-        }
+        updateProgressTask.handleFollowers(orderId, followers, multiProgressList);
         List<FollowerFetters> followerFetters = progressOverview.getFollowerFetters();
-        if (!CollectionUtil.isEmpty(followerFetters)) {
-            try {
-                updateProgressTask.handleFollowerFetters(orderId, followerFetters);
-            } catch (Exception e) {
-                LOGGER.error("更新从者羁绊失败！{}", e.getMessage());
-                success = false;
-            }
-        }
-
+        updateProgressTask.handleFollowerFetters(orderId, followerFetters, multiProgressList);
         List<GatherMaterials> gatherMaterials = progressOverview.getGatherMaterials();
-        if (!CollectionUtil.isEmpty(gatherMaterials)) {
-            try {
-                updateProgressTask.handleMaterials(orderId, gatherMaterials);
-            } catch (Exception e) {
-                LOGGER.error("更新材料失败！{}", e.getMessage());
-                success = false;
-            }
-        }
-
+        updateProgressTask.handleMaterials(orderId, gatherMaterials, multiProgressList);
         List<PurchaseLevels> purchaseLevels = progressOverview.getPurchaseLevels();
-        if (!CollectionUtil.isEmpty(purchaseLevels)) {
-            try {
-                updateProgressTask.handlePurchaseLevels(orderId, purchaseLevels);
-            } catch (Exception e) {
-                LOGGER.error("更新购买关卡失败！{}", e.getMessage());
-                success = false;
-            }
-        }
-
+        updateProgressTask.handlePurchaseLevels(orderId, purchaseLevels, multiProgressList);
         List<BoostingEvents> boostingEvents = progressOverview.getBoostingEvents();
-        if (!CollectionUtil.isEmpty(boostingEvents)) {
-            try {
-                updateProgressTask.handleEvents(orderId, boostingEvents);
-            } catch (Exception e) {
-                LOGGER.error("更新活动代练失败！{}", e.getMessage());
-                success = false;
-            }
-        }
-        return success;
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleEvents(long orderId, List<BoostingEvents> boostingEvents) {
-        BoostingDetail existed = boostingDetailService.queryByOrderIdAndTypeWithLock(orderId, BusinessType.BoostingEvents);
-        if (existed != null) {
-            String progress = existed.getProgress();
-            List<BoostingEvents> existedBoostingEvents = JSONUtil.toList(progress, BoostingEvents.class);
-            //更新已有的
-            existedBoostingEvents.forEach(eventItem -> {
-                Optional<BoostingEvents> any = boostingEvents
-                        .stream()
-                        .filter(event -> event.getEventName()
-                                .equals(eventItem.getEventName()))
-                        .findAny();
-                if (any.isPresent()) {
-                    BoostingEvents anyItem = any.get();
-                    BeanUtils.copyProperties(anyItem, eventItem);
-                }
-            });
+        updateProgressTask.handleEvents(orderId, boostingEvents, multiProgressList);
+        if (!multiProgressList.isEmpty()) {
+            multiProgressList.forEach(item -> item.setModifyTime(modifyTime));
+            multiProgressService.updateProgress(multiProgressList);
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handlePurchaseLevels(long orderId, List<PurchaseLevels> purchaseLevels) {
-        BoostingDetail existed = boostingDetailService.queryByOrderIdAndTypeWithLock(orderId, BusinessType.PurchaseLevels);
-        if (existed != null) {
-            String progress = existed.getProgress();
-            List<PurchaseLevels> existedPurchaseLevels = JSONUtil.toList(progress, PurchaseLevels.class);
-            //更新已有的
-            existedPurchaseLevels.forEach(purchaseLevelsItem -> {
-                Optional<PurchaseLevels> any = purchaseLevels
-                        .stream()
-                        .filter(purchaseLevel -> purchaseLevel.getLevelName()
-                                .equals(purchaseLevelsItem.getLevelName()))
-                        .findAny();
-                if (any.isPresent()) {
-                    PurchaseLevels anyItem = any.get();
-                    BeanUtils.copyProperties(anyItem, purchaseLevelsItem);
-                }
-            });
-        }
+
+    public void handleEvents(long orderId, List<BoostingEvents> boostingEvents, List<MultiProgress> multiProgressList) {
+        boostingEvents.forEach(item -> {
+            String name = item.getEventName();
+            String progress = JSONUtil.toJsonStr(item);
+            MultiProgress multiProgress = new MultiProgress();
+            multiProgress.setOrderId(orderId);
+            multiProgress.setProgress(progress);
+            multiProgress.setBusinessKey(name);
+            multiProgress.setStatus(item.getStatus());
+            // todo 如果他没有 就写本地时间
+            multiProgress.setLastUpdateTime(item.getLastUpdateTime());
+            multiProgressList.add(multiProgress);
+        });
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleMaterials(long orderId, List<GatherMaterials> gatherMaterials) {
-        BoostingDetail existed = boostingDetailService.queryByOrderIdAndTypeWithLock(orderId, BusinessType.GatherMaterials);
-        if (existed != null) {
-            String progress = existed.getProgress();
-            List<GatherMaterials> existedGatherMaterials = JSONUtil.toList(progress, GatherMaterials.class);
-            //更新已有的
-            existedGatherMaterials.forEach(gatherMaterialItem -> {
-                Optional<GatherMaterials> any = gatherMaterials
-                        .stream()
-                        .filter(material -> material.getMaterialName()
-                                .equals(gatherMaterialItem.getMaterialName()))
-                        .findAny();
-                if (any.isPresent()) {
-                    GatherMaterials anyItem = any.get();
-                    BeanUtils.copyProperties(anyItem, gatherMaterialItem);
-                }
-            });
-        }
+    public void handlePurchaseLevels(long orderId, List<PurchaseLevels> purchaseLevels, List<MultiProgress> multiProgressList) {
+        purchaseLevels.forEach(item -> {
+            String name = item.getLevelName();
+            String progress = JSONUtil.toJsonStr(item);
+            MultiProgress multiProgress = new MultiProgress();
+            multiProgress.setOrderId(orderId);
+            multiProgress.setProgress(progress);
+            multiProgress.setBusinessKey(name);
+            multiProgress.setStatus(item.getStatus());
+            // todo 如果他没有 就写本地时间
+            multiProgress.setLastUpdateTime(item.getLastUpdateTime());
+            multiProgressList.add(multiProgress);
+        });
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleFollowerFetters(long orderId, List<FollowerFetters> followerFetters) {
-        BoostingDetail existed = boostingDetailService.queryByOrderIdAndTypeWithLock(orderId, BusinessType.FollowerFetters);
-        if (existed != null) {
-            String progress = existed.getProgress();
-            List<FollowerFetters> existedFollowerFetters = JSONUtil.toList(progress, FollowerFetters.class);
-            //更新已有的
-            existedFollowerFetters.forEach(followerFettersItem -> {
-                Optional<FollowerFetters> any = followerFetters
-                        .stream()
-                        .filter(syncFollowerFetters -> syncFollowerFetters.getFollowerName()
-                                .equals(followerFettersItem.getFollowerName()))
-                        .findAny();
-                if (any.isPresent()) {
-                    FollowerFetters anyItem = any.get();
-                    BeanUtils.copyProperties(anyItem, followerFettersItem);
-                }
-            });
-            // 追加新的
-            followerFetters.removeAll(existedFollowerFetters);
-            existedFollowerFetters.addAll(followerFetters);
-        }
+    public void handleMaterials(long orderId, List<GatherMaterials> gatherMaterials, List<MultiProgress> multiProgressList) {
+        gatherMaterials.forEach(item -> {
+            String name = item.getMaterialName();
+            String progress = JSONUtil.toJsonStr(item);
+            MultiProgress multiProgress = new MultiProgress();
+            multiProgress.setOrderId(orderId);
+            multiProgress.setProgress(progress);
+            multiProgress.setBusinessKey(name);
+            multiProgress.setStatus(item.getStatus());
+            // todo 如果他没有 就写本地时间
+            multiProgress.setLastUpdateTime(item.getLastUpdateTime());
+            multiProgressList.add(multiProgress);
+        });
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleFollowers(long orderId, List<Follower> followers) {
-        BoostingDetail existed = boostingDetailService.queryByOrderIdAndTypeWithLock(orderId, BusinessType.Follower);
-        if (existed != null) {
-            String progress = existed.getProgress();
-            List<Follower> existedFollowers = JSONUtil.toList(progress, Follower.class);
-            //更新已有的
-            existedFollowers.forEach(followerItem -> {
-                Optional<Follower> any = followers
-                        .stream()
-                        .filter(follower -> follower.getFollowerName()
-                                .equals(followerItem.getFollowerName()))
-                        .findAny();
-                if (any.isPresent()) {
-                    Follower anyItem = any.get();
-                    BeanUtils.copyProperties(anyItem, followerItem);
-                }
-            });
-            // 追加新的
-            followers.removeAll(existedFollowers);
-            existedFollowers.addAll(followers);
-        }
+    public void handleFollowerFetters(long orderId, List<FollowerFetters> followerFetters, List<MultiProgress> multiProgressList) {
+        followerFetters.forEach(item -> {
+            String followerName = item.getFollowerName();
+            String profession = item.getProfession();
+            String progress = JSONUtil.toJsonStr(item);
+            MultiProgress multiProgress = new MultiProgress();
+            multiProgress.setOrderId(orderId);
+            multiProgress.setProgress(progress);
+            multiProgress.setBusinessKey(profession + "|" + followerName);
+            multiProgress.setStatus(item.getStatus());
+            // todo 如果他没有 就写本地时间
+            multiProgress.setLastUpdateTime(item.getLastUpdateTime());
+            multiProgressList.add(multiProgress);
+        });
+    }
+
+    public void handleFollowers(long orderId, List<Follower> followers, List<MultiProgress> multiProgressList) {
+        followers.forEach(item -> {
+            String followerName = item.getFollowerName();
+            String profession = item.getProfession();
+            String progress = JSONUtil.toJsonStr(item);
+            MultiProgress multiProgress = new MultiProgress();
+            multiProgress.setOrderId(orderId);
+            multiProgress.setProgress(progress);
+            multiProgress.setBusinessKey(profession + "|" + followerName);
+            multiProgress.setStatus(item.getStatus());
+            // todo 如果他没有 就写本地时间
+            multiProgress.setLastUpdateTime(item.getLastUpdateTime());
+            multiProgressList.add(multiProgress);
+        });
     }
 }

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fgo.management.mapper.MultiProgressMapper">
+    <insert id="merge">
+        insert into multi_progress(orderId, businessType, businessKey, progress, target,
+        status,createTime,lastUpdateTime )
+        values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.orderId},
+            #{item.businessType},
+            #{item.businessKey},
+            #{item.progress},
+            #{item.target},
+            #{item.status},
+            #{item.createTime},
+            #{item.lastUpdateTime}
+            )
+        </foreach>
+        on DUPLICATE KEY UPDATE createTime=values(createTime)
+    </insert>
+    <update id="updateProgress">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update multi_progress
+            SET
+            lastUpdateTime=#{item.lastUpdateTime},
+            progress = #{item.progress},
+            status = #{item.status},
+            modifyTime = #{item.modifyTime}
+            where orderId = #{item.orderId}
+            and businessType = #{item.businessType}
+            and businessKey = #{item.businessKey}
+            <if test="item.status.equals('D')">
+                and modifyTime &lt;= #{item.modifyTime}
+            </if>
+        </foreach>
+    </update>
+    <update id="updateTarget">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update multi_progress
+            SET
+            target = #{item.target},
+            status = 'N',
+            modifyTime = #{modifyTime}
+            where orderId = #{orderId}
+            and businessType = #{type}
+            and businessKey = #{item.key}
+        </foreach>
+    </update>
+    <delete id="deleteBusiness">
+        DELETE
+        from multi_progress
+        where orderId = #{orderId}
+          and businessType = #{type}
+    </delete>
+    <delete id="deleteKey">
+        DELETE
+        from multi_progress
+        where orderId = #{orderId}
+        and businessType = #{type}
+        and businessKey in
+        <foreach collection="list" item="item" index="index" open="" close="" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="queryProgressByOrderId" resultType="com.fgo.management.model.MultiProgress">
+        SELECT *
+        from multi_progress
+        where orderId = #{orderId}
+    </select>
+</mapper>

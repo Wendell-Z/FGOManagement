@@ -82,7 +82,8 @@
             recentlyLoginTime = #{bean.recentlyLoginTime},
             exceptionMessage  = #{bean.exceptionMessage},
             updateStatus      = 'N',
-            battleCount       = #{bean.battleCount}
+            battleCount       = #{bean.battleCount},
+            orderStatus       = #{bean.orderStatus}
         where id = #{bean.id}
     </update>
     <update id="updateToSyncFollower">
@@ -124,6 +125,7 @@
                 <choose>
                     <when test="condition.status.equals('UNFINISHED')">
                         AND orderStatus != 'FINISHED'
+                        AND orderStatus != 'SETTLED'
                     </when>
                     <otherwise>
                         AND orderStatus = #{condition.status}
