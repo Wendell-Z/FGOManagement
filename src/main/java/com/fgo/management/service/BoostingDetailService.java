@@ -1,6 +1,5 @@
 package com.fgo.management.service;
 
-import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.fgo.management.common.Constants;
 import com.fgo.management.dto.KeyTarget;
@@ -194,12 +193,12 @@ public class BoostingDetailService {
     private void removeByIndex(BoostingDetail boostingDetail, BoostingDetail existed) {
         long orderId = boostingDetail.getOrderId();
         String businessType = boostingDetail.getBusinessType();
-        // 匹配任务和进度 删除对应的即可
-        int index = Integer.parseInt(boostingDetail.getProgress());
+        // 匹配任务 删除对应的即可
+        String[] key = boostingDetail.getProgress().split("\\|");
         String existedBoostingTask = existed.getBoostingTask();
         String[] business = existedBoostingTask.split(",");
         List<String> leftBusiness = Arrays.stream(business).collect(Collectors.toList());
-        leftBusiness.remove(index);
+        leftBusiness.removeIf(item -> item.contains(key[0]) && item.contains(key[1]));
         if (leftBusiness.isEmpty()) {
             businessDetailMapper.delete(orderId, businessType);
         } else {
@@ -211,11 +210,6 @@ public class BoostingDetailService {
                 }
             }
             existed.setBoostingTask(sb.toString());
-            // 进度也要删
-            String progress = existed.getProgress();
-            JSONArray objects = JSONUtil.parseArray(progress);
-            objects.remove(index);
-            existed.setProgress(JSONUtil.toJsonStr(objects));
             businessDetailMapper.update(existed);
         }
     }
