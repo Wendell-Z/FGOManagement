@@ -9,16 +9,19 @@
          boostingTask,
          progress,
          createTime,
-         lastUpdateTime)
+         lastUpdateTime,
+         target)
         VALUES (#{bean.orderId},
                 #{bean.businessType},
                 #{bean.status},
                 #{bean.boostingTask},
                 #{bean.progress},
                 #{bean.createTime},
-                #{bean.lastUpdateTime})
+                #{bean.lastUpdateTime},
+                #{bean.target})
         ON DUPLICATE KEY UPDATE boostingTask = #{bean.boostingTask},
-                                status       = 'N'
+                                status       = 'N',
+                                target       = #{bean.target}
     </insert>
     <update id="update">
         UPDATE boosting_detail
@@ -57,7 +60,7 @@
         WHERE orderId = #{orderId}
     </select>
     <select id="queryProgressByOrderId" resultType="com.fgo.management.model.BoostingDetail">
-        SELECT businessType, progress, target
+        SELECT businessType, progress, target, createTime, lastUpdateTime
         FROM boosting_detail
         WHERE orderId = #{orderId}
     </select>

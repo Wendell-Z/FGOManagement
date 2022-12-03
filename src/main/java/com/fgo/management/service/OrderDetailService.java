@@ -176,6 +176,8 @@ public class OrderDetailService {
             Daily daily = JSONUtil.toBean(detail.getProgress(), Daily.class);
             // refresh target
             daily.setDays(Integer.parseInt(target));
+            daily.setCreateTime(detail.getCreateTime());
+            daily.setLastUpdateTime(detail.getLastUpdateTime());
             progressOverview.setDaily(daily);
         }
         if (boostingDetailMap.containsKey(BusinessType.GatherBalls)) {
@@ -184,7 +186,9 @@ public class OrderDetailService {
             GatherBalls gatherBalls = JSONUtil.toBean(detail.getProgress(), GatherBalls.class);
             // refresh target
             gatherBalls.setBallsCount(Integer.parseInt(target));
-            progressOverview.setGatherBalls(JSONUtil.toBean(boostingDetailMap.get(BusinessType.GatherBalls).getProgress(), GatherBalls.class));
+            gatherBalls.setCreateTime(detail.getCreateTime());
+            gatherBalls.setLastUpdateTime(detail.getLastUpdateTime());
+            progressOverview.setGatherBalls(gatherBalls);
         }
         if (boostingDetailMap.containsKey(BusinessType.GatherDogFood)) {
             BoostingDetail detail = boostingDetailMap.get(BusinessType.GatherDogFood);
@@ -192,7 +196,9 @@ public class OrderDetailService {
             GatherDogFood gatherDogFood = JSONUtil.toBean(detail.getProgress(), GatherDogFood.class);
             // refresh target
             gatherDogFood.setTotal(Integer.parseInt(target));
-            progressOverview.setGatherDogFood(JSONUtil.toBean(boostingDetailMap.get(BusinessType.GatherDogFood).getProgress(), GatherDogFood.class));
+            gatherDogFood.setCreateTime(detail.getCreateTime());
+            gatherDogFood.setLastUpdateTime(detail.getLastUpdateTime());
+            progressOverview.setGatherDogFood(gatherDogFood);
         }
         if (boostingDetailMap.containsKey(BusinessType.GatherGreenSquare)) {
             BoostingDetail detail = boostingDetailMap.get(BusinessType.GatherGreenSquare);
@@ -200,7 +206,9 @@ public class OrderDetailService {
             GatherGreenSquare gatherGreenSquare = JSONUtil.toBean(detail.getProgress(), GatherGreenSquare.class);
             // refresh target
             gatherGreenSquare.setTotal(Integer.parseInt(target));
-            progressOverview.setGatherGreenSquare(JSONUtil.toBean(boostingDetailMap.get(BusinessType.GatherGreenSquare).getProgress(), GatherGreenSquare.class));
+            gatherGreenSquare.setCreateTime(detail.getCreateTime());
+            gatherGreenSquare.setLastUpdateTime(detail.getLastUpdateTime());
+            progressOverview.setGatherGreenSquare(gatherGreenSquare);
         }
         if (boostingDetailMap.containsKey(BusinessType.SignIn)) {
             BoostingDetail detail = boostingDetailMap.get(BusinessType.SignIn);
@@ -208,7 +216,9 @@ public class OrderDetailService {
             SignIn signIn = JSONUtil.toBean(detail.getProgress(), SignIn.class);
             // refresh target
             signIn.setDays(Integer.parseInt(target));
-            progressOverview.setSignIn(JSONUtil.toBean(boostingDetailMap.get(BusinessType.SignIn).getProgress(), SignIn.class));
+            signIn.setCreateTime(detail.getCreateTime());
+            signIn.setLastUpdateTime(detail.getLastUpdateTime());
+            progressOverview.setSignIn(signIn);
         }
 
         if (multiProgressMap.containsKey(BusinessType.Follower)) {
@@ -218,8 +228,12 @@ public class OrderDetailService {
                 Follower follower = JSONUtil.toBean(item.getProgress(), Follower.class);
                 follower.setCreateTime(item.getCreateTime());
                 follower.setLastUpdateTime(item.getLastUpdateTime());
-                // todo 这里对target 分割 设置不同的值
-                follower.setHolyGrailTotal(Integer.parseInt(item.getTarget()));
+                String target = item.getTarget();
+                String[] targetArr = target.split("\\|");
+                follower.setLevelBreak(Boolean.parseBoolean(targetArr[0]));
+                follower.setSkillBreak(Boolean.parseBoolean(targetArr[1]));
+                follower.setHolyGrailChange(Boolean.parseBoolean(targetArr[2]));
+                follower.setHolyGrailTotal(Integer.parseInt(targetArr[3]));
                 followers.add(follower);
             });
             progressOverview.setFollower(followers);
@@ -258,7 +272,6 @@ public class OrderDetailService {
                 BoostingEvents boostingEvents = JSONUtil.toBean(item.getProgress(), BoostingEvents.class);
                 boostingEvents.setCreateTime(item.getCreateTime());
                 boostingEvents.setLastUpdateTime(item.getLastUpdateTime());
-                boostingEvents.setBoostingContent(item.getTarget());
                 boostingEventsList.add(boostingEvents);
             });
             progressOverview.setBoostingEvents(boostingEventsList);
@@ -271,29 +284,59 @@ public class OrderDetailService {
                 PurchaseLevels purchaseLevel = JSONUtil.toBean(item.getProgress(), PurchaseLevels.class);
                 purchaseLevel.setCreateTime(item.getCreateTime());
                 purchaseLevel.setLastUpdateTime(item.getLastUpdateTime());
-                purchaseLevel.setBoostingContent(item.getTarget());
                 purchaseLevels.add(purchaseLevel);
             });
             progressOverview.setPurchaseLevels(purchaseLevels);
         }
         if (boostingDetailMap.containsKey(BusinessType.GatherQP)) {
-            progressOverview.setGatherQP(JSONUtil.toBean(boostingDetailMap.get(BusinessType.GatherQP).getProgress(), GatherQP.class));
+            BoostingDetail detail = boostingDetailMap.get(BusinessType.GatherQP);
+            GatherQP gatherQP = JSONUtil.toBean(detail.getProgress(), GatherQP.class);
+            gatherQP.setTotal(Integer.parseInt(detail.getTarget()));
+            gatherQP.setCreateTime(detail.getCreateTime());
+            gatherQP.setLastUpdateTime(detail.getLastUpdateTime());
+            progressOverview.setGatherQP(gatherQP);
         }
         progressOverview.setBoostingLevels(new ArrayList<>());
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevels)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevels).getProgress(), BoostingLevels.class));
+            BoostingDetail detail = boostingDetailMap.get(BusinessType.BoostingLevels);
+            List<BoostingLevels> boostingLevels = JSONUtil.toList(detail.getProgress(), BoostingLevels.class);
+            BoostingLevels levels = boostingLevels.get(0);
+            levels.setCreateTime(detail.getCreateTime());
+            levels.setLastUpdateTime(detail.getLastUpdateTime());
+            // todo 可能后面优化target
+            progressOverview.getBoostingLevels().addAll(boostingLevels);
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfHunting)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfHunting).getProgress(), BoostingLevels.class));
+            BoostingDetail detail = boostingDetailMap.get(BusinessType.BoostingLevelsOfHunting);
+            List<BoostingLevels> boostingLevels = JSONUtil.toList(detail.getProgress(), BoostingLevels.class);
+            BoostingLevels levels = boostingLevels.get(0);
+            levels.setLastUpdateTime(detail.getLastUpdateTime());
+            levels.setCreateTime(detail.getCreateTime());
+            progressOverview.getBoostingLevels().addAll(boostingLevels);
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfStory)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfStory).getProgress(), BoostingLevels.class));
+            BoostingDetail detail = boostingDetailMap.get(BusinessType.BoostingLevelsOfStory);
+            List<BoostingLevels> boostingLevels = JSONUtil.toList(detail.getProgress(), BoostingLevels.class);
+            BoostingLevels levels = boostingLevels.get(0);
+            levels.setLastUpdateTime(detail.getLastUpdateTime());
+            levels.setCreateTime(detail.getCreateTime());
+            progressOverview.getBoostingLevels().addAll(boostingLevels);
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfStrengthen)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfStrengthen).getProgress(), BoostingLevels.class));
+            BoostingDetail detail = boostingDetailMap.get(BusinessType.BoostingLevelsOfStrengthen);
+            List<BoostingLevels> boostingLevels = JSONUtil.toList(detail.getProgress(), BoostingLevels.class);
+            BoostingLevels levels = boostingLevels.get(0);
+            levels.setLastUpdateTime(detail.getLastUpdateTime());
+            levels.setCreateTime(detail.getCreateTime());
+            progressOverview.getBoostingLevels().addAll(boostingLevels);
         }
         if (boostingDetailMap.containsKey(BusinessType.BoostingLevelsOfPractice)) {
-            progressOverview.getBoostingLevels().addAll(JSONUtil.toList(boostingDetailMap.get(BusinessType.BoostingLevelsOfPractice).getProgress(), BoostingLevels.class));
+            BoostingDetail detail = boostingDetailMap.get(BusinessType.BoostingLevelsOfPractice);
+            List<BoostingLevels> boostingLevels = JSONUtil.toList(detail.getProgress(), BoostingLevels.class);
+            BoostingLevels levels = boostingLevels.get(0);
+            levels.setLastUpdateTime(detail.getLastUpdateTime());
+            levels.setCreateTime(detail.getCreateTime());
+            progressOverview.getBoostingLevels().addAll(boostingLevels);
         }
         return progressOverview;
     }
