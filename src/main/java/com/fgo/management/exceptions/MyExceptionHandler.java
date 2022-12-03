@@ -37,6 +37,7 @@ public class MyExceptionHandler {
             message = e.getCause().getMessage();
         }
         LOGGER.error("统一异常捕捉:{}", message);
+        e.printStackTrace();
         return MyResponse.failed(message);
     }
 

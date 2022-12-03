@@ -2,6 +2,7 @@ package com.fgo.management.service;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
+import com.fgo.management.common.Constants;
 import com.fgo.management.dto.KeyTarget;
 import com.fgo.management.enums.BusinessType;
 import com.fgo.management.enums.OperateType;
@@ -15,9 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +54,14 @@ public class BoostingDetailService {
                         }
                         if (type == BusinessType.PurchaseLevels) {
                             // 关卡=金色庆典获取任务|代练内容=活动毕业|购买关卡
-                            businessKey = businessKey.split("\\|")[0].split("=")[1];
+                            String[] items = businessKey.split("\\|");
+                            businessKey = items[0].split("=")[1] + "|" + items[1].split("=")[1];
+                        }
+                        if (type == BusinessType.BoostingEvents) {
+                            String[] items = boostingTask.split("\\|");
+                            String name = items[0].split("=")[1];
+                            String content = items[1].split("=")[1];
+                            businessKey = name + "|" + content;
                         }
                         String progress = boostingDetail.getProgress();
                         progress = progress.replace("\\", "");
@@ -106,12 +112,12 @@ public class BoostingDetailService {
                 if (OperateType.ADD == operateType) {
                     List<KeyTarget> keyTargets = new ArrayList<>();
                     if (type == BusinessType.BoostingEvents || type == BusinessType.Follower || type == BusinessType.FollowerFetters) {
-                        keyTargets.add(new KeyTarget(boostingTask, boostingDetail.getTarget()));
-                        handleFormat1(boostingDetail, existed);
+                        String[] items = boostingTask.split("\\|");
+                        keyTargets.add(new KeyTarget(items[0].split("=")[1] + "|" + items[1].split("=")[1], boostingDetail.getTarget()));
+                        handleFormat1(boostingDetail, existed, initTime);
                     }
                     if (type == BusinessType.PurchaseLevels) {
-                        keyTargets.add(new KeyTarget(boostingTask, boostingDetail.getTarget()));
-                        handleFormat2(boostingDetail, existed);
+                        handleFormat2(boostingDetail, existed, initTime);
                     }
                     if (type == BusinessType.GatherMaterials) {
                         String[] settings = boostingTask.split("\\|");
@@ -122,7 +128,7 @@ public class BoostingDetailService {
                             String[] setting = settings[i].split("=");
                             keyTargets.add(new KeyTarget(setting[0], setting[1]));
                         }
-                        handleFormat3(existed, boostingTask);
+                        handleFormat3(existed, boostingTask, initTime);
                     }
                     multiProgressService.updateTarget(orderId, type, keyTargets, initTime);
                     businessDetailMapper.update(existed);
@@ -130,17 +136,10 @@ public class BoostingDetailService {
                 if (OperateType.DELETE == operateType) {
                     List<String> keys = new ArrayList<>();
                     if (BusinessType.GatherMaterials == type) {
-                        String[] settings = boostingTask.split("\\|");
-                        for (int i = 0; i < settings.length; i++) {
-                            if (i == settings.length - 1) {
-                                continue;
-                            }
-                            String key = settings[i].split("=")[0];
-                            keys.add(key);
-                        }
+                        keys.add(boostingDetail.getProgress());
                         removeByName(boostingDetail, existed);
                     } else {
-                        keys.add(boostingTask);
+                        keys.add(boostingDetail.getProgress());
                         removeByIndex(boostingDetail, existed);
                     }
                     multiProgressService.deleteKey(orderId, type, keys);
@@ -188,11 +187,6 @@ public class BoostingDetailService {
                 }
             }
             existed.setBoostingTask(sb.toString());
-            // 进度也要删
-            String progress = existed.getProgress();
-            List<GatherMaterials> gatherMaterials = JSONUtil.toList(progress, GatherMaterials.class);
-            gatherMaterials.removeIf(item -> item.getMaterialName().equals(name));
-            existed.setProgress(JSONUtil.toJsonStr(gatherMaterials));
             businessDetailMapper.update(existed);
         }
     }
@@ -226,31 +220,56 @@ public class BoostingDetailService {
         }
     }
 
-    private void handleFormat3(BoostingDetail existed, String boostingTask) {
+    private void handleFormat3(BoostingDetail existed, String boostingTask, Timestamp timestamp) {
         String[] business = boostingTask.split("\\|");
-        String progress = existed.getProgress();
-        List<GatherMaterials> gatherMaterials = JSONUtil.toList(progress, GatherMaterials.class);
-        List<GatherMaterials> newMaterialList = new ArrayList<>();
-        Arrays.stream(business)
-                .filter(materialName -> gatherMaterials
-                        .stream()
-                        .noneMatch(item -> item.getMaterialName().contains(materialName)))
-                .forEach(item -> {
-                    String[] items = item.split("=");
-                    GatherMaterials material = new GatherMaterials();
-                    material.setMaterialName(items[0]);
-                    material.setTotal(Integer.parseInt(items[1]));
-                    material.setStatus("N");
-                    material.setActivePowerCost(0);
-                    material.setCreateTime(new Timestamp(System.currentTimeMillis()));
-                    material.setLastUpdateTime(new Timestamp(0));
-                    material.setDoneCount(0);
-                    newMaterialList.add(material);
-                });
-        gatherMaterials.addAll(newMaterialList);
-        existed.setProgress(JSONUtil.toJsonStr(gatherMaterials));
+        List<String> taskList = Arrays.asList(business);
+        String existedBoostingTask = existed.getBoostingTask();
+        List<String> existedList = new ArrayList<>(Arrays.asList(existedBoostingTask.split("\\|")));
+        List<MultiProgress> multiProgressList = new ArrayList<>();
+        taskList.forEach(item -> {
+            if ("素材".equals(item)) {
+                return;
+            }
+            String[] split = item.split("=");
+            String name = split[0];
+            String target = split[1];
+            Optional<String> any = existedList.stream().filter(task -> task.contains(name)).findAny();
+            if (any.isPresent()) {
+                String s = any.get();
+                existedList.remove(s);
+                existedList.add(existedList.size() - 1, item);
+
+            } else {
+                existedList.add(existedList.size() - 1, item);
+                MultiProgress multiProgress = new MultiProgress();
+                multiProgress.setOrderId(existed.getOrderId());
+                multiProgress.setModifyTime(timestamp);
+                multiProgress.setCreateTime(timestamp);
+                multiProgress.setLastUpdateTime(timestamp);
+                multiProgress.setStatus("N");
+                multiProgress.setBusinessKey(name);
+                multiProgress.setBusinessType(BusinessType.GatherMaterials.name());
+                multiProgress.setTarget(target);
+                GatherMaterials gatherMaterials = new GatherMaterials();
+                gatherMaterials.setTotal(Integer.parseInt(target));
+                gatherMaterials.setCreateTime(timestamp);
+                gatherMaterials.setLastUpdateTime(timestamp);
+                gatherMaterials.setStatus("N");
+                gatherMaterials.setMaterialName(name);
+                gatherMaterials.setActivePowerCost(0);
+                gatherMaterials.setDoneCount(0);
+                multiProgress.setProgress(JSONUtil.toJsonStr(gatherMaterials));
+                multiProgressList.add(multiProgress);
+            }
+        });
         existed.setStatus("N");
-        existed.setBoostingTask(boostingTask);
+        StringBuilder sb = new StringBuilder();
+        existedList.forEach(item -> sb.append(item).append("|"));
+        sb.delete(sb.length() - 1, sb.length());
+        existed.setBoostingTask(sb.toString());
+        if (!multiProgressList.isEmpty()) {
+            multiProgressService.merge(multiProgressList);
+        }
     }
 
 
@@ -259,30 +278,30 @@ public class BoostingDetailService {
         existed.setBoostingTask(existedBoostingTask);
     }
 
-    private void handleFormat2(BoostingDetail boostingDetail, BoostingDetail existed) {
+    private void handleFormat2(BoostingDetail boostingDetail, BoostingDetail existed, Timestamp timestamp) {
         String boostingTask = boostingDetail.getBoostingTask();
         String existedBoostingTask = existed.getBoostingTask();
-        // 单个
-        String[] inBusiness = boostingTask.split("\\|");
         String[] business = existedBoostingTask.split(",");
-        // 多个
-        boolean isNew = true;
-        for (int i = 0, businessLength = business.length; i < businessLength; i++) {
-            String item = business[i];
-            String[] littleItem = item.split("\\|");
-            if (littleItem[0].equals(inBusiness[0])) {
-                // 要替换
-                business[i] = boostingTask;
-                isNew = false;
-            }
-        }
-        if (isNew) {
-            appendBusiness(existed, existedBoostingTask, boostingTask);
+        boolean noneMatch = Arrays.stream(business).noneMatch(item -> item.equals(boostingTask));
+        if (noneMatch) {
+            existedBoostingTask = existedBoostingTask + "," + boostingTask;
+            existed.setBoostingTask(existedBoostingTask);
             existed.setStatus("N");
+            MultiProgress multiProgress = new MultiProgress();
+            multiProgress.setOrderId(existed.getOrderId());
+            multiProgress.setModifyTime(timestamp);
+            multiProgress.setCreateTime(timestamp);
+            multiProgress.setLastUpdateTime(timestamp);
+            multiProgress.setStatus("N");
+            multiProgress.setBusinessKey(boostingTask);
+            multiProgress.setBusinessType(BusinessType.PurchaseLevels.name());
+            multiProgress.setTarget(Constants.EMPTY_STRING);
+            multiProgress.setProgress(JSONUtil.parseArray(boostingDetail.getProgress()).getJSONObject(0).toString());
+            multiProgressService.merge(Collections.singletonList(multiProgress));
         }
     }
 
-    private void handleFormat1(BoostingDetail boostingDetail, BoostingDetail existed) {
+    private void handleFormat1(BoostingDetail boostingDetail, BoostingDetail existed, Timestamp timestamp) {
         String boostingTask = boostingDetail.getBoostingTask();
         String existedBoostingTask = existed.getBoostingTask();
         // 单个
@@ -301,6 +320,17 @@ public class BoostingDetailService {
         }
         if (isNew) {
             appendBusiness(existed, existedBoostingTask, boostingTask);
+            MultiProgress multiProgress = new MultiProgress();
+            multiProgress.setOrderId(boostingDetail.getOrderId());
+            multiProgress.setStatus("N");
+            multiProgress.setBusinessType(boostingDetail.getBusinessType());
+            multiProgress.setCreateTime(timestamp);
+            multiProgress.setLastUpdateTime(timestamp);
+            multiProgress.setTarget(Constants.EMPTY_STRING);
+            multiProgress.setBusinessKey(inBusiness[0].split("=")[1] + "|" + inBusiness[1].split("=")[1]);
+            multiProgress.setModifyTime(timestamp);
+            multiProgress.setProgress(JSONUtil.parseArray(boostingDetail.getProgress()).getJSONObject(0).toString());
+            multiProgressService.merge(Collections.singletonList(multiProgress));
         } else {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < business.length; i++) {
@@ -339,7 +369,7 @@ public class BoostingDetailService {
                 "    \"followerFetters\": [\n" +
                 "        {\n" +
                 "            \"profession\": \"saber\",\n" +
-                "            \"followerName\": \"\",\n" +
+                "            \"followerName\": \"saber\",\n" +
                 "            \"starLevel\": 0,\n" +
                 "            \"fettersLevel\": 0,\n" +
                 "            \"finalFettersLevel\": 0,\n" +

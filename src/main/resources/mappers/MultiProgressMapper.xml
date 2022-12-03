@@ -59,7 +59,7 @@
         where orderId = #{orderId}
         and businessType = #{type}
         and businessKey in
-        <foreach collection="list" item="item" index="index" open="" close="" separator=",">
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
             #{item}
         </foreach>
     </delete>

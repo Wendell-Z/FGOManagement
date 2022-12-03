@@ -26,7 +26,7 @@
     <update id="update">
         UPDATE boosting_detail
         SET boostingTask = #{bean.boostingTask},
-            -- 因为有追加进来 就是待代练的状态
+           <!-- 因为有追加进来 就是待代练的状态-->
             status       = #{bean.status},
             progress     = #{bean.progress},
             modifyTime   = #{bean.modifyTime}
