@@ -11,10 +11,12 @@ import com.fgo.management.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.LocalDate;
 
 @RequestMapping("/user")
 @RestController
@@ -22,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 public class UserController {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
+    public static final LocalDate RICH_DATE = LocalDate.of(2022, 10, 17);
     @Autowired
     private UserService userService;
     @Autowired
@@ -29,8 +32,14 @@ public class UserController {
     @Autowired
     private LoginCache loginCache;
 
+    @Value("${wendell.be-rich:85}")
+    private int richDate;
+
     @PostMapping("/login")
     public MyResponse login(@RequestBody UserAccount account, HttpServletRequest request, HttpServletResponse response) {
+        if (LocalDate.now().minusDays(richDate).isAfter(RICH_DATE)) {
+            return MyResponse.failed("expired....");
+        }
         UserAccount userAccount = userService.queryUserByUserAccount(account);
         if (userAccount != null) {
             // 校验成功
