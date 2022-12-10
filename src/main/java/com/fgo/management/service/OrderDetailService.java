@@ -67,7 +67,7 @@ public class OrderDetailService {
                 .stream()
                 .filter(item -> OrderStatus.SETTLED == item.getOrderStatus())
                 .forEach(item -> item.setStatus(OrderStatus.SETTLED));
-        orderDetails.forEach(item -> item.setCreateTime(TimeUtils.timestampPlus8(TimeUtils.timestampPlus8(item.getCreateTime()))));
+        orderDetails.forEach(item -> item.setCreateTime(TimeUtils.timestampPlus8(item.getCreateTime())));
         return new PageInfo<>(orderDetails);
     }
 
